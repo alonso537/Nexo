@@ -1,7 +1,3 @@
-import dotenv from 'dotenv';
+import { startServer } from "./server";
 
-dotenv.config();
-
-const PORT = process.env.PORT ?? '3000';
-
-console.log(`Nexo running on port ${PORT}`);
+startServer()
