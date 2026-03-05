@@ -1,15 +1,21 @@
-import { createApp } from "./app"
-import { env } from "./config/env"
 
-export const startServer = (): Promise<void> => {
+import { createApp } from './app';
+import { env } from './config/env';
+import { ConnectDb } from './modules/user/infrastructure/db/mongo';
+import { logger } from './shared/infrastructure/logger/logger';
+
+export const startServer = async (): Promise<void> => {
+  const connectDb = new ConnectDb(env.MONGO_URI);
+  await connectDb.connect();
+
+  const app = createApp();
+
   return new Promise((resolve, reject) => {
-    const app = createApp()
-
     const server = app.listen(env.PORT, () => {
-      console.log(`Nexo running on port ${env.PORT} in ${env.NODE_ENV} mode`)
-      resolve()
-    })
+      logger.info(`Nexo running on port ${env.PORT} in ${env.NODE_ENV} mode`);
+      resolve();
+    });
 
-    server.on('error', reject)
-  })
-}
+    server.on('error', reject);
+  });
+};
