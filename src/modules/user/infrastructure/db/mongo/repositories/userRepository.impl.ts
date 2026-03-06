@@ -6,7 +6,7 @@ import { FiltersUsers, UserrepositoryDomain } from "../../../../domain/repositor
 import { UserMapper } from "../../../mapper/user.mapper";
 import { IUser, UserModel } from "../models/user";
 
-export class userRepositoryImpl implements UserrepositoryDomain {
+export class UserRepositoryImpl implements UserrepositoryDomain {
     async save(user: UserEntity): Promise<void> {
         const data = user.toPersistence();
 

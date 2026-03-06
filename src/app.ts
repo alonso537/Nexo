@@ -4,15 +4,24 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 
+import { env } from './config/env';
+import { errorMiddleware } from './shared/infrastructure/errors/errorMiddleware';
+//rutas
+import { authRoutes } from './shared/infrastructure/routes/auth.routes';
+
 export const createApp = () => {
     // Initialize Express app
     const app = express()
 
     //middlewares
     app.use(helmet());
-    app.use(cors())
+    app.use(cors({
+        origin: env.CORS_ORIGINS.split(','),
+        methods: env.CORS_METHODS.split(','),
+        credentials: env.CORS_CREDENTIALS,
+    }));
     app.use(express.json());
-    app.use(cookieParser())
+    app.use(cookieParser(env.SECRET))
 
     app.use(rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
@@ -22,6 +31,14 @@ export const createApp = () => {
     }))
 
     //rutas
+    app.get('/health', (_req, res) => {
+        res.status(200).json({ message: 'OK' });
+    });
+
+    // Rutas de autenticación
+    app.use('/api/v1/auth', authRoutes);
+
+    app.use(errorMiddleware);
 
     return app;
 

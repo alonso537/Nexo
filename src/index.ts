@@ -1,6 +1,7 @@
+import { logger } from './shared/infrastructure/logger/logger';
 import { startServer } from "./server";
 
 startServer().catch((err) => {
-  console.error('Failed to start server:', err);
+  logger.error(err, 'Failed to start server');
   process.exit(1);
 });
