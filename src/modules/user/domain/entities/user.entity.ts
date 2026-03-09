@@ -27,6 +27,7 @@ export class UserEntity {
     private passwordResetToken: ExpiringTokenVO | null,
     private blockedAt: Date | null,
     private blockedReason: string | null,
+    private tokenVersion: number = 0, // Para invalidar tokens antiguos
     private createdAt: Date,
     private updatedAt: Date,
     private deletedAt: Date | null,
@@ -53,7 +54,7 @@ export class UserEntity {
       null, // passwordResetToken
       null, // blockedAt
       null, // blockedReason
-
+      0, // tokenVersion
       new Date(), // createdAt
       new Date(), // updatedAt
       null, // deletedAt
@@ -95,6 +96,15 @@ export class UserEntity {
     this.touch();
   }
 
+  public regenerateVerificationToken(): void {
+    this.ensureNotDeleted();
+    if (this._status !== 'PENDING') {
+      throw new AppError('Only pending users can request a new verification token', 400, 'INVALID_USER_STATUS');
+    }
+    this.verificationToken = ExpiringTokenVO.generate(15);
+    this.touch();
+  }
+
   public deactivate(): void {
     this.ensureNotDeleted();
     this.ensureActive();
@@ -105,7 +115,7 @@ export class UserEntity {
 
   public suspend(): void {
     this.ensureNotDeleted();
-    this.ensureActive()
+    this.ensureActive();
 
     this._status = 'SUSPENDED';
     this.touch();
@@ -127,7 +137,7 @@ export class UserEntity {
 
   public updateUserName(newUsername: string): void {
     this.ensureNotDeleted();
-    this.ensureActive();
+    this.ensureNotBlocked();
 
     this.username = UsernameVO.create(newUsername);
     this.touch();
@@ -135,9 +145,10 @@ export class UserEntity {
 
   public updateEmail(newEmail: string): void {
     this.ensureNotDeleted();
-    if (this._status !== 'ACTIVE' && this._status !== 'PENDING') {
+    this.ensureNotBlocked();
+    if (this._status === 'INACTIVE') {
       throw new AppError(
-        'Email can only be updated when user is active or pending',
+        'Email can only be updated when user is active, pending or suspended',
         403,
         'INVALID_USER_STATUS',
       );
@@ -158,7 +169,7 @@ export class UserEntity {
 
   public updatePassword(newPasswordHash: string, verificationCode: string): void {
     this.ensureNotDeleted();
-    this.ensureActive();
+    this.ensureNotBlocked();
 
     if (!newPasswordHash || newPasswordHash.trim() === '') {
       throw new AppError('New password is required', 400, 'PASSWORD_REQUIRED');
@@ -182,19 +193,20 @@ export class UserEntity {
 
     this.passwordHash = newPasswordHash;
     this.passwordResetToken = null;
+    this.tokenVersion++;
     this.touch();
   }
 
   public generatePasswordResetToken(): void {
     this.ensureNotDeleted();
-    this.ensureActive();
-    this.passwordResetToken = ExpiringTokenVO.generate(15);
+    this.ensureNotBlocked();
+    this.passwordResetToken = ExpiringTokenVO.generate(60); // Token valido por 60 minutos
     this.touch();
   }
 
   public setProfile(name: string, lastName: string): void {
     this.ensureNotDeleted();
-    this.ensureActive();
+    this.ensureNotBlocked();
     this.name = PersonNameVO.create(name);
     this.lastName = PersonNameVO.create(lastName);
     this.touch();
@@ -216,7 +228,14 @@ export class UserEntity {
   public updatePhotoProfile(newPhotokey: string): void {
     this.ensureNotDeleted();
     this.ensureActive();
+    this.ensureNotSuspended();
     this.photoProfile = PhotoProfileVO.create(newPhotokey);
+    this.touch();
+  }
+
+  public incrementTokenVersion(): void {
+    this.ensureNotDeleted();
+    this.tokenVersion++;
     this.touch();
   }
 
@@ -249,6 +268,7 @@ export class UserEntity {
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       deletedAt: this.deletedAt,
+      tokenVersion: this.tokenVersion,
     };
   }
 
@@ -288,6 +308,7 @@ export class UserEntity {
     passwordResetToken: { value: string; expiresAt: Date } | null;
     blockedAt: Date | null;
     blockedReason: string | null;
+    tokenVersion: number;
     createdAt: Date;
     updatedAt: Date;
     deletedAt: Date | null;
@@ -305,19 +326,25 @@ export class UserEntity {
       data.verifiedAt,
       data.lastLoginAt,
       data.verificationToken
-        ? ExpiringTokenVO.fromPersistence(data.verificationToken.value, data.verificationToken.expiresAt)
+        ? ExpiringTokenVO.fromPersistence(
+            data.verificationToken.value,
+            data.verificationToken.expiresAt,
+          )
         : null,
       data.passwordResetToken
-        ? ExpiringTokenVO.fromPersistence(data.passwordResetToken.value, data.passwordResetToken.expiresAt)
+        ? ExpiringTokenVO.fromPersistence(
+            data.passwordResetToken.value,
+            data.passwordResetToken.expiresAt,
+          )
         : null,
       data.blockedAt,
       data.blockedReason,
+      data.tokenVersion ?? 0,
       data.createdAt,
       data.updatedAt,
       data.deletedAt,
     );
   }
-
 
   private touch(): void {
     this.updatedAt = new Date();
@@ -326,6 +353,18 @@ export class UserEntity {
   private ensureActive(): void {
     if (this._status !== 'ACTIVE') {
       throw new AppError('User must be active to perform this action', 403, 'USER_NOT_ACTIVE');
+    }
+  }
+
+  private ensureNotBlocked(): void {
+    if (this._status === 'BLOCKED') {
+      throw new AppError('Your account has been blocked', 403, 'USER_BLOCKED');
+    }
+  }
+
+  private ensureNotSuspended(): void {
+    if (this._status === 'SUSPENDED') {
+      throw new AppError('Your account is suspended', 402, 'USER_SUSPENDED');
     }
   }
 

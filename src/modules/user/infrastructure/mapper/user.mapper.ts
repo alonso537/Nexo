@@ -22,6 +22,7 @@ export const UserMapper = (doc: IUser): UserEntity => {
       : null,
     blockedAt: doc.blockedAt,
     blockedReason: doc.blockedReason,
+    tokenVersion: doc.tokenVersion,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
     deletedAt: doc.deletedAt,

@@ -9,7 +9,10 @@ REST API construida con Node.js, Express y TypeScript siguiendo los principios d
 - **Runtime:** Node.js 22
 - **Framework:** Express 5
 - **Lenguaje:** TypeScript (strict)
-- **Base de datos:** MongoDB
+- **Base de datos:** MongoDB + Mongoose
+- **Autenticación:** JWT (access + refresh tokens)
+- **Hashing:** bcryptjs
+- **Validación:** Zod
 - **Logger:** Pino
 - **Testing:** Vitest
 - **Contenedores:** Docker + Docker Compose
@@ -20,15 +23,15 @@ REST API construida con Node.js, Express y TypeScript siguiendo los principios d
 
 ```
 src/
-├── config/           # Variables de entorno y configuración global
+├── config/           # Variables de entorno (Zod) y contenedor de dependencias
 ├── modules/          # Módulos de negocio (DDD)
 │   └── user/
 │       ├── domain/       # Entidades, VOs, puertos, repositorio (interfaz)
-│       ├── application/  # Casos de uso
-│       └── infrastructure/ # Implementaciones (repositorio, adaptadores)
+│       ├── application/  # Casos de uso y DTOs
+│       └── infrastructure/ # Modelo Mongoose, mapper, repositorio, adaptadores JWT/bcrypt, controller, presenter
 └── shared/           # Código compartido entre módulos
-    ├── domain/           # Errores, VOs base, puertos compartidos
-    └── infrastructure/   # Logger, middlewares
+    ├── domain/           # AppError, VOs base
+    └── infrastructure/   # Logger, middlewares, rutas, asyncHandler
 ```
 
 ---
@@ -82,14 +85,39 @@ docker compose up --build
 
 Ver [.env.example](.env.example) para la lista completa de variables requeridas.
 
-Las más importantes:
+| Variable | Descripción | Default |
+|---|---|---|
+| `NODE_ENV` | Entorno de ejecución | `development` |
+| `PORT` | Puerto del servidor | `3000` |
+| `MONGO_URI` | URI de conexión a MongoDB | — |
+| `SECRET` | Secret general (cookie parser) | — |
+| `JWT_ACCESS_SECRET` | Secret para firmar access tokens | — |
+| `JWT_REFRESH_SECRET` | Secret para firmar refresh tokens | — |
+| `JWT_ACCESS_TTL` | TTL del access token | `15m` |
+| `JWT_REFRESH_TTL` | TTL del refresh token | `7d` |
+| `COOKIE_SECURE` | Cookies solo HTTPS | `false` |
+| `COOKIE_DOMAIN` | Dominio de las cookies | — |
+| `CORS_ORIGINS` | Orígenes permitidos (separados por coma) | — |
 
-| Variable | Descripción |
-|---|---|
-| `MONGO_URI` | URI de conexión a MongoDB |
-| `JWT_ACCESS_SECRET` | Secret para firmar access tokens |
-| `JWT_REFRESH_SECRET` | Secret para firmar refresh tokens |
-| `SECRET` | Secret general de la app |
+---
+
+## Endpoints
+
+Base URL: `/api`
+
+### Auth — `/api/auth`
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `POST` | `/register` | — | Registra un nuevo usuario |
+| `POST` | `/login` | — | Inicia sesión, devuelve access token y cookie de refresh |
+| `GET` | `/me` | ✅ Bearer | Devuelve el usuario autenticado |
+| `POST` | `/refresh-token` | Cookie | Emite un nuevo access token |
+| `POST` | `/logout` | ✅ Bearer | Invalida la sesión y limpia la cookie |
+| `GET` | `/verify-email` | — | Verifica el email con el token recibido por correo (`?token=`) |
+| `POST` | `/resend-verification` | — | Reenvía el correo de verificación |
+| `POST` | `/forgot-password` | — | Solicita el enlace de recuperación de contraseña |
+| `POST` | `/reset-password` | — | Restablece la contraseña con el token recibido por correo (`?token=`) |
 
 ---
 
@@ -102,3 +130,4 @@ El proyecto sigue **Clean Architecture** con las siguientes capas:
 - **Infrastructure** — Implementaciones concretas (MongoDB, JWT, bcrypt, S3, etc.).
 
 Las reglas de dependencia fluyen siempre hacia adentro: `Infrastructure → Application → Domain`.
+

@@ -22,6 +22,7 @@ export interface IUser {
   } | null;
   blockedAt: Date | null;
   blockedReason: string | null;
+  tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -60,6 +61,7 @@ const userSchema = new Schema<IUser>(
     passwordResetToken: { type: tokenSchema, default: null },
     blockedAt: { type: Date, default: null },
     blockedReason: { type: String, default: null },
+    tokenVersion: { type: Number, default: 0 },
     deletedAt: { type: Date, default: null },
   },
   {

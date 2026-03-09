@@ -18,6 +18,8 @@ export interface UserrepositoryDomain {
   findById(id: string): Promise<UserEntity | null>;
   findByEmail(email: string): Promise<UserEntity | null>;
   findByUsername(username: string): Promise<UserEntity | null>;
+  findByVerificationToken(token: string): Promise<UserEntity | null>;
+  findByPasswordResetToken(token: string): Promise<UserEntity | null>;
   findAll(filters?: FiltersUsers): Promise<{
     users: UserEntity[];
     total: number;

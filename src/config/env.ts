@@ -19,3 +19,29 @@ import 'dotenv/config';
 })
 
 export const env = envSchema.parse(process.env)
+
+function parseTimeToMs(timeStr: string): number {
+    const match = timeStr.match(/^(\d+)([smhd])$/);
+    if (!match) {
+        throw new Error(`Invalid time format: ${timeStr}. Use format like: 15m, 7d, 2h, 30s`);
+    }
+
+    const value = parseInt(match[1], 10);
+    const unit = match[2];
+
+    switch (unit) {
+        case 's': return value * 1000;
+        case 'm': return value * 60 * 1000;
+        case 'h': return value * 60 * 60 * 1000;
+        case 'd': return value * 24 * 60 * 60 * 1000;
+        default: throw new Error(`Unknown time unit: ${unit}`);
+    }
+}
+
+export function getJwtAccessTtlMs(): number {
+    return parseTimeToMs(env.JWT_ACCESS_TTL);
+}
+
+export function getJwtRefreshTtlMs(): number {
+    return  parseTimeToMs(env.JWT_REFRESH_TTL);
+}

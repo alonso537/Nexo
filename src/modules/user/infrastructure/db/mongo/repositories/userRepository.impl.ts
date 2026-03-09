@@ -78,6 +78,16 @@ export class UserRepositoryImpl implements UserrepositoryDomain {
         return doc ? UserMapper(doc.toObject()) : null;
     }
 
+    async findByVerificationToken(token: string): Promise<UserEntity | null> {
+        const doc = await UserModel.findOne({ 'verificationToken.token': token, deletedAt: null });
+        return doc ? UserMapper(doc.toObject()) : null;
+    }
+
+    async findByPasswordResetToken(token: string): Promise<UserEntity | null> {
+        const doc = await UserModel.findOne({ 'passwordResetToken.token': token, deletedAt: null });
+        return doc ? UserMapper(doc.toObject()) : null;
+    }
+
     async findAll(filters?: FiltersUsers): Promise<{ users: UserEntity[]; total: number }> {
         try {
             const query: FilterQuery<IUser> = {};
