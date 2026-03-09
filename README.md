@@ -13,6 +13,7 @@ REST API construida con Node.js, Express y TypeScript siguiendo los principios d
 - **Autenticación:** JWT (access + refresh tokens)
 - **Hashing:** bcryptjs
 - **Validación:** Zod
+- **Email:** Nodemailer (SMTP)
 - **Logger:** Pino
 - **Testing:** Vitest
 - **Contenedores:** Docker + Docker Compose
@@ -28,7 +29,7 @@ src/
 │   └── user/
 │       ├── domain/       # Entidades, VOs, puertos, repositorio (interfaz)
 │       ├── application/  # Casos de uso y DTOs
-│       └── infrastructure/ # Modelo Mongoose, mapper, repositorio, adaptadores JWT/bcrypt, controller, presenter
+│       └── infrastructure/ # Modelo Mongoose, mapper, repositorio, adaptadores JWT/bcrypt/email, controller, presenter
 └── shared/           # Código compartido entre módulos
     ├── domain/           # AppError, VOs base
     └── infrastructure/   # Logger, middlewares, rutas, asyncHandler
@@ -98,6 +99,12 @@ Ver [.env.example](.env.example) para la lista completa de variables requeridas.
 | `COOKIE_SECURE` | Cookies solo HTTPS | `false` |
 | `COOKIE_DOMAIN` | Dominio de las cookies | — |
 | `CORS_ORIGINS` | Orígenes permitidos (separados por coma) | — |
+| `SMTP_HOST` | Host del servidor SMTP | — |
+| `SMTP_PORT` | Puerto SMTP | `587` |
+| `SMTP_USER` | Usuario SMTP | — |
+| `SMTP_PASS` | Contraseña SMTP | — |
+| `SMTP_FROM` | Dirección remitente | `Nexo <no-reply@nexo.app>` |
+| `FRONTEND_URL` | URL base del frontend (para links en emails) | `http://localhost:3000` |
 
 ---
 

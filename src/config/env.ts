@@ -16,6 +16,12 @@ import 'dotenv/config';
     CORS_ORIGINS: z.string().default('http://localhost:3000'),
     CORS_METHODS: z.string().default('GET,POST,PUT,PATCH,DELETE'),
     CORS_CREDENTIALS: z.coerce.boolean().default(true),
+    SMTP_HOST: z.string().min(1, 'SMTP_HOST is required'),
+    SMTP_PORT: z.coerce.number().int().default(587),
+    SMTP_USER: z.string().min(1, 'SMTP_USER is required'),
+    SMTP_PASS: z.string().min(1, 'SMTP_PASS is required'),
+    SMTP_FROM: z.string().default('Nexo <no-reply@nexo.app>'),
+    FRONTEND_URL: z.string().url().default('http://localhost:3000'),
 })
 
 export const env = envSchema.parse(process.env)
