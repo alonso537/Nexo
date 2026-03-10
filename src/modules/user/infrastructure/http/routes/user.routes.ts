@@ -9,6 +9,9 @@ import { UpdateUsernameSchema } from "../../../application/dto/updateUsername.dt
 import { UpdateEmailSchema } from "../../../application/dto/updateEmail.dto";
 import { IsAdmin, IsSuperAdmin } from "../../../../../shared/infrastructure/http/express/middleware/authorize.middleware";
 import { ChangeRoleLimitedSchema, ChangeRoleSchema } from "../../../application/dto/changeRole.dto";
+import { ChangeStatusSchema } from "../../../application/dto/changeStatus.dto";
+import { StatusBlockSchema } from "../../../application/dto/statusBlock.dto";
+import { UpdatePasswordSchema } from "../../../application/dto/updatePassword.dto";
 
 
 export const userRoutes = Router();
@@ -21,3 +24,7 @@ userRoutes.patch('/username', authenticate, validate(UpdateUsernameSchema), user
 userRoutes.patch('/email', authenticate, validate(UpdateEmailSchema), user.updateEmail)
 userRoutes.patch('/:id/role', authenticate, IsAdmin, validate(ChangeRoleLimitedSchema), user.changeRole)
 userRoutes.patch('/:id/role/admin', authenticate, IsSuperAdmin, validate(ChangeRoleSchema), user.changeRole)
+userRoutes.patch('/:id/status/deactivate', authenticate, IsAdmin, validate(ChangeStatusSchema), user.deactivate)
+userRoutes.patch('/:id/status/suspend', authenticate, IsAdmin, validate(ChangeStatusSchema), user.suspend)
+userRoutes.patch('/:id/status/block', authenticate, IsSuperAdmin, validate(StatusBlockSchema), user.block)
+userRoutes.patch('/password', authenticate, validate(UpdatePasswordSchema), user.updatePassword)

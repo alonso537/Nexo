@@ -168,6 +168,14 @@ export class UserEntity {
     this.touch();
   }
 
+  public changePassword(newPasswordHash: string): void {
+    this.ensureNotDeleted();
+    this.ensureNotBlocked();
+    this.passwordHash = newPasswordHash;
+    this.tokenVersion++;
+    this.touch();
+}
+
   public updatePassword(newPasswordHash: string, verificationCode: string): void {
     this.ensureNotDeleted();
     this.ensureNotBlocked();

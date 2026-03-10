@@ -1,4 +1,6 @@
+import { BlockUsecase } from '../modules/user/application/usecase/block.usecase';
 import { ChangeRoleUsecase } from '../modules/user/application/usecase/changeRole.usecase';
+import { DeactivateUsecase } from '../modules/user/application/usecase/deactivate.usecase';
 import { ForgotPasswordUsecase } from '../modules/user/application/usecase/forgotPassword.usecase';
 import { GetmeUserUsecase } from '../modules/user/application/usecase/getMeUser.usecase';
 import { LoginuserUsecase } from '../modules/user/application/usecase/loginuser.usecase';
@@ -7,9 +9,11 @@ import { RefreshTokenUsecase } from '../modules/user/application/usecase/refresh
 import { RegisterUserUsecase } from '../modules/user/application/usecase/registerUser.usecase';
 import { ResendVerificationUsecase } from '../modules/user/application/usecase/resendToken.usecase';
 import { ResetPasswordUsecase } from '../modules/user/application/usecase/resetPassword.usecase';
+import { SuspendUsecase } from '../modules/user/application/usecase/suspend.usecase';
 import { UpdateEmailUsecase } from '../modules/user/application/usecase/updateEmail.usecase';
 import { UpdateLastNameUsecase } from '../modules/user/application/usecase/updateLastName.usecase';
 import { UpdateNameUsecase } from '../modules/user/application/usecase/updateName.usecase';
+import { UpdatePasswordUsecase } from '../modules/user/application/usecase/UpdatePassword.usecase';
 import { UpdateUsernameUsecase } from '../modules/user/application/usecase/updateUsername.usecase';
 import { VerifyEmailUsecase } from '../modules/user/application/usecase/verifyEmail.usecase';
 import { UserRepositoryImpl } from '../modules/user/infrastructure/db/mongo/repositories/userRepository.impl';
@@ -45,6 +49,10 @@ class Container {
   private updateUsernameUC = new UpdateUsernameUsecase(this.userRep);
   private updateEmailUC = new UpdateEmailUsecase(this.userRep, this.mailService);
   private changeRoleUC = new ChangeRoleUsecase(this.userRep);
+  private deactivateUC = new DeactivateUsecase(this.userRep);
+  private suspendUC = new SuspendUsecase(this.userRep);
+  private blockUC = new BlockUsecase(this.userRep);
+  private updatePasswordUC = new UpdatePasswordUsecase(this.userRep, this.passwordService);
   //presenters
   private userPresenter = new UserPresenter();
   //controllers
@@ -66,6 +74,10 @@ class Container {
     this.updateUsernameUC,
     this.updateEmailUC,
     this.changeRoleUC,
+    this.deactivateUC,
+    this.suspendUC,
+    this.blockUC,
+    this.updatePasswordUC,
     this.userPresenter
   )
 

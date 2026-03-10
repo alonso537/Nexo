@@ -134,8 +134,12 @@ Base URL: `/api`
 | `PATCH` | `/last-name` | ✅ Bearer | Actualiza el apellido del usuario |
 | `PATCH` | `/username` | ✅ Bearer | Actualiza el nombre de usuario |
 | `PATCH` | `/email` | ✅ Bearer | Actualiza el email y envía verificación al nuevo correo |
+| `PATCH` | `/password` | ✅ Bearer | Cambia la contraseña (requiere contraseña actual) |
 | `PATCH` | `/:id/role` | ✅ ADMIN | Cambia el rol de un usuario a `USER` o `SUPPORT` |
 | `PATCH` | `/:id/role/admin` | ✅ SUPER_ADMIN | Cambia el rol de un usuario a `ADMIN`, `USER` o `SUPPORT` |
+| `PATCH` | `/:id/status/deactivate` | ✅ ADMIN | Desactiva la cuenta de un usuario |
+| `PATCH` | `/:id/status/suspend` | ✅ ADMIN | Suspende la cuenta de un usuario |
+| `PATCH` | `/:id/status/block` | ✅ SUPER_ADMIN | Bloquea la cuenta de un usuario (requiere motivo) |
 
 ---
 
