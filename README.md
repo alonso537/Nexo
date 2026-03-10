@@ -134,6 +134,8 @@ Base URL: `/api`
 | `PATCH` | `/last-name` | ✅ Bearer | Actualiza el apellido del usuario |
 | `PATCH` | `/username` | ✅ Bearer | Actualiza el nombre de usuario |
 | `PATCH` | `/email` | ✅ Bearer | Actualiza el email y envía verificación al nuevo correo |
+| `PATCH` | `/:id/role` | ✅ ADMIN | Cambia el rol de un usuario a `USER` o `SUPPORT` |
+| `PATCH` | `/:id/role/admin` | ✅ SUPER_ADMIN | Cambia el rol de un usuario a `ADMIN`, `USER` o `SUPPORT` |
 
 ---
 

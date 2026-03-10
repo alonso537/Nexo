@@ -1,7 +1,6 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
-import jwt from 'jsonwebtoken';
+import jwt, { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { env } from '../../../../../config/env';
 import { AppError } from '../../../../domain/errors/AppError';
 

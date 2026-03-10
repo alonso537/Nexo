@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "seed": "cross-env NODE_ENV=development tsx src/scripts/seed-super-admin.ts"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",

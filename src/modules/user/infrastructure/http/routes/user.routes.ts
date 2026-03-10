@@ -7,6 +7,8 @@ import { UpdateLastNameSchema } from "../../../application/dto/updateLastName.dt
 import { UpdateNameSchema } from "../../../application/dto/updateName.dto";
 import { UpdateUsernameSchema } from "../../../application/dto/updateUsername.dto";
 import { UpdateEmailSchema } from "../../../application/dto/updateEmail.dto";
+import { IsAdmin, IsSuperAdmin } from "../../../../../shared/infrastructure/http/express/middleware/authorize.middleware";
+import { ChangeRoleLimitedSchema, ChangeRoleSchema } from "../../../application/dto/changeRole.dto";
 
 
 export const userRoutes = Router();
@@ -17,3 +19,5 @@ userRoutes.patch('/name', authenticate, validate(UpdateNameSchema), user.updateN
 userRoutes.patch('/last-name', authenticate, validate(UpdateLastNameSchema), user.updateLastName)
 userRoutes.patch('/username', authenticate, validate(UpdateUsernameSchema), user.updateUsername)
 userRoutes.patch('/email', authenticate, validate(UpdateEmailSchema), user.updateEmail)
+userRoutes.patch('/:id/role', authenticate, IsAdmin, validate(ChangeRoleLimitedSchema), user.changeRole)
+userRoutes.patch('/:id/role/admin', authenticate, IsSuperAdmin, validate(ChangeRoleSchema), user.changeRole)

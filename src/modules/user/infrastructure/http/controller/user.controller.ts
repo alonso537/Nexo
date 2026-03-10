@@ -5,6 +5,7 @@ import { UpdateLastNameUsecase } from '../../../application/usecase/updateLastNa
 import { UpdateNameUsecase } from '../../../application/usecase/updateName.usecase';
 import { UpdateUsernameUsecase } from '../../../application/usecase/updateUsername.usecase';
 import { UserPresenter } from '../../presenter/user.presenter';
+import { ChangeRoleUsecase } from '../../../application/usecase/changeRole.usecase';
 
 export class UserController {
   constructor(
@@ -12,6 +13,7 @@ export class UserController {
     private readonly updateLastNameUC: UpdateLastNameUsecase,
     private readonly updateUsernameUC: UpdateUsernameUsecase,
     private readonly updateEmailUC: UpdateEmailUsecase,
+    private readonly changeRoleUC: ChangeRoleUsecase,
     private readonly userPresenter: UserPresenter,
   ) {}
 
@@ -56,4 +58,15 @@ export class UserController {
       data: this.userPresenter.one(user),
     });
   });
+
+  changeRole = asyncHandler(async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const { role } = req.body;
+
+    const user = await this.changeRoleUC.execute({ id: id as string, role });
+    res.status(200).json({
+      message: 'Role updated successfully',
+      data: this.userPresenter.one(user),
+    });
+  })
 }

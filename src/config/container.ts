@@ -1,3 +1,4 @@
+import { ChangeRoleUsecase } from '../modules/user/application/usecase/changeRole.usecase';
 import { ForgotPasswordUsecase } from '../modules/user/application/usecase/forgotPassword.usecase';
 import { GetmeUserUsecase } from '../modules/user/application/usecase/getMeUser.usecase';
 import { LoginuserUsecase } from '../modules/user/application/usecase/loginuser.usecase';
@@ -38,10 +39,12 @@ class Container {
   private resendVerificationUC = new ResendVerificationUsecase(this.userRep, this.mailService);
   private forgotPasswordUC = new ForgotPasswordUsecase(this.userRep, this.mailService);
   private resetPasswordUC = new ResetPasswordUsecase(this.userRep, this.passwordService);
+  //usecases user
   private updateNameUC = new UpdateNameUsecase(this.userRep);
   private updateLastNameUC = new UpdateLastNameUsecase(this.userRep);
   private updateUsernameUC = new UpdateUsernameUsecase(this.userRep);
   private updateEmailUC = new UpdateEmailUsecase(this.userRep, this.mailService);
+  private changeRoleUC = new ChangeRoleUsecase(this.userRep);
   //presenters
   private userPresenter = new UserPresenter();
   //controllers
@@ -62,9 +65,10 @@ class Container {
     this.updateLastNameUC,
     this.updateUsernameUC,
     this.updateEmailUC,
+    this.changeRoleUC,
     this.userPresenter
   )
-  
+
   get AuthController() {
     return this.authController;
   }
