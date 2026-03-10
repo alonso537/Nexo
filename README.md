@@ -126,6 +126,15 @@ Base URL: `/api`
 | `POST` | `/forgot-password` | — | Solicita el enlace de recuperación de contraseña |
 | `POST` | `/reset-password` | — | Restablece la contraseña con el token recibido por correo (`?token=`) |
 
+### User — `/api/user`
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `PATCH` | `/name` | ✅ Bearer | Actualiza el nombre del usuario |
+| `PATCH` | `/last-name` | ✅ Bearer | Actualiza el apellido del usuario |
+| `PATCH` | `/username` | ✅ Bearer | Actualiza el nombre de usuario |
+| `PATCH` | `/email` | ✅ Bearer | Actualiza el email y envía verificación al nuevo correo |
+
 ---
 
 ## Arquitectura

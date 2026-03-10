@@ -7,7 +7,8 @@ import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
 import { errorMiddleware } from './shared/infrastructure/errors/errorMiddleware';
 //rutas
-import { authRoutes } from './shared/infrastructure/routes/auth.routes';
+import { authRoutes } from './modules/user/infrastructure/http/routes/auth.routes';
+import { userRoutes } from './modules/user/infrastructure/http/routes/user.routes';
 
 export const createApp = () => {
     // Initialize Express app
@@ -36,7 +37,8 @@ export const createApp = () => {
     });
 
     // Rutas de autenticación
-    app.use('/api/v1/auth', authRoutes);
+    app.use('/api/auth', authRoutes);
+    app.use('/api/user', userRoutes);
 
     app.use(errorMiddleware);
 

@@ -163,7 +163,8 @@ export class UserEntity {
     this.email = emailVO;
     this._status = 'PENDING';
     this.verifiedAt = null;
-    this.verificationToken = ExpiringTokenVO.generate(15);
+    this.verificationToken = ExpiringTokenVO.generate(60);
+    this.tokenVersion++;
     this.touch();
   }
 
@@ -208,6 +209,20 @@ export class UserEntity {
     this.ensureNotDeleted();
     this.ensureNotBlocked();
     this.name = PersonNameVO.create(name);
+    this.lastName = PersonNameVO.create(lastName);
+    this.touch();
+  }
+
+  public updateName(name: string): void {
+    this.ensureNotDeleted();
+    this.ensureNotBlocked();
+    this.name = PersonNameVO.create(name);
+    this.touch();
+  }
+
+  public updateLastName(lastName: string): void {
+    this.ensureNotDeleted();
+    this.ensureNotBlocked();
     this.lastName = PersonNameVO.create(lastName);
     this.touch();
   }
