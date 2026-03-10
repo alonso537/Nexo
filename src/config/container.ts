@@ -15,6 +15,7 @@ import { UpdateLastNameUsecase } from '../modules/user/application/usecase/updat
 import { UpdateNameUsecase } from '../modules/user/application/usecase/updateName.usecase';
 import { UpdatePasswordUsecase } from '../modules/user/application/usecase/UpdatePassword.usecase';
 import { UpdateUsernameUsecase } from '../modules/user/application/usecase/updateUsername.usecase';
+import { UpdatePhotoProfileUsecase } from '../modules/user/application/usecase/photoProfile.usecase';
 import { VerifyEmailUsecase } from '../modules/user/application/usecase/verifyEmail.usecase';
 import { UserRepositoryImpl } from '../modules/user/infrastructure/db/mongo/repositories/userRepository.impl';
 import { NodemailerAdapter } from '../modules/user/infrastructure/email/nodemailer.adapter';
@@ -23,12 +24,14 @@ import { UserController } from '../modules/user/infrastructure/http/controller/u
 import { UserPresenter } from '../modules/user/infrastructure/presenter/user.presenter';
 import { BcryptAdapter } from '../modules/user/infrastructure/security/BcryptAdapter.adapter';
 import { JwtAdapter } from '../modules/user/infrastructure/security/JwtAdapter.adapter';
+import { S3Adapter } from '../shared/infrastructure/storage/s3.adapter';
 
 class Container {
   //services
   private tokenService = new JwtAdapter();
   private passwordService = new BcryptAdapter();
   private mailService = new NodemailerAdapter();
+  private storageService = new S3Adapter();
 
   //repositories
   private userRep = new UserRepositoryImpl();
@@ -53,6 +56,7 @@ class Container {
   private suspendUC = new SuspendUsecase(this.userRep);
   private blockUC = new BlockUsecase(this.userRep);
   private updatePasswordUC = new UpdatePasswordUsecase(this.userRep, this.passwordService);
+  private updatePhotoProfileUC = new UpdatePhotoProfileUsecase(this.userRep, this.storageService);
   //presenters
   private userPresenter = new UserPresenter();
   //controllers
@@ -78,6 +82,7 @@ class Container {
     this.suspendUC,
     this.blockUC,
     this.updatePasswordUC,
+    this.updatePhotoProfileUC,
     this.userPresenter
   )
 

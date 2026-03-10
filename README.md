@@ -14,6 +14,8 @@ REST API construida con Node.js, Express y TypeScript siguiendo los principios d
 - **Hashing:** bcryptjs
 - **Validación:** Zod
 - **Email:** Nodemailer (SMTP)
+- **Almacenamiento:** AWS S3 / Cloudflare R2 (`@aws-sdk/client-s3`)
+- **Subida de archivos:** Multer
 - **Logger:** Pino
 - **Testing:** Vitest
 - **Contenedores:** Docker + Docker Compose
@@ -32,7 +34,7 @@ src/
 │       └── infrastructure/ # Modelo Mongoose, mapper, repositorio, adaptadores JWT/bcrypt/email, controller, presenter
 └── shared/           # Código compartido entre módulos
     ├── domain/           # AppError, VOs base
-    └── infrastructure/   # Logger, middlewares, rutas, asyncHandler
+    └── infrastructure/   # Logger, middlewares, rutas, asyncHandler, S3Adapter
 ```
 
 ---
@@ -105,6 +107,12 @@ Ver [.env.example](.env.example) para la lista completa de variables requeridas.
 | `SMTP_PASS` | Contraseña SMTP | — |
 | `SMTP_FROM` | Dirección remitente | `Nexo <no-reply@nexo.app>` |
 | `FRONTEND_URL` | URL base del frontend (para links en emails) | `http://localhost:3000` |
+| `STORAGE_ENDPOINT` | Endpoint S3-compatible (requerido para R2, omitir para AWS S3) | — |
+| `STORAGE_REGION` | Región del bucket | `auto` |
+| `STORAGE_ACCESS_KEY` | Access Key ID | — |
+| `STORAGE_SECRET_KEY` | Secret Access Key | — |
+| `STORAGE_BUCKET` | Nombre del bucket | — |
+| `STORAGE_PUBLIC_URL` | URL pública base del bucket | — |
 
 ---
 
@@ -135,6 +143,7 @@ Base URL: `/api`
 | `PATCH` | `/username` | ✅ Bearer | Actualiza el nombre de usuario |
 | `PATCH` | `/email` | ✅ Bearer | Actualiza el email y envía verificación al nuevo correo |
 | `PATCH` | `/password` | ✅ Bearer | Cambia la contraseña (requiere contraseña actual) |
+| `PATCH` | `/avatar` | ✅ Bearer | Sube o reemplaza la foto de perfil (`multipart/form-data`, campo `avatar`) |
 | `PATCH` | `/:id/role` | ✅ ADMIN | Cambia el rol de un usuario a `USER` o `SUPPORT` |
 | `PATCH` | `/:id/role/admin` | ✅ SUPER_ADMIN | Cambia el rol de un usuario a `ADMIN`, `USER` o `SUPPORT` |
 | `PATCH` | `/:id/status/deactivate` | ✅ ADMIN | Desactiva la cuenta de un usuario |

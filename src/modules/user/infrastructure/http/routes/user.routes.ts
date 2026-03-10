@@ -12,6 +12,7 @@ import { ChangeRoleLimitedSchema, ChangeRoleSchema } from "../../../application/
 import { ChangeStatusSchema } from "../../../application/dto/changeStatus.dto";
 import { StatusBlockSchema } from "../../../application/dto/statusBlock.dto";
 import { UpdatePasswordSchema } from "../../../application/dto/updatePassword.dto";
+import { uploadMulter } from "../../../../../shared/infrastructure/http/express/middleware/upload.middleware";
 
 
 export const userRoutes = Router();
@@ -28,3 +29,4 @@ userRoutes.patch('/:id/status/deactivate', authenticate, IsAdmin, validate(Chang
 userRoutes.patch('/:id/status/suspend', authenticate, IsAdmin, validate(ChangeStatusSchema), user.suspend)
 userRoutes.patch('/:id/status/block', authenticate, IsSuperAdmin, validate(StatusBlockSchema), user.block)
 userRoutes.patch('/password', authenticate, validate(UpdatePasswordSchema), user.updatePassword)
+userRoutes.patch('/avatar', authenticate, uploadMulter.single('avatar'), user.updatePhotoProfile)

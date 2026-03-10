@@ -11,6 +11,9 @@ import { SuspendUsecase } from '../../../application/usecase/suspend.usecase';
 import { BlockUsecase } from '../../../application/usecase/block.usecase';
 import { Role } from '../../../domain/entities/user.entity';
 import { UpdatePasswordUsecase } from '../../../application/usecase/UpdatePassword.usecase';
+import { UpdatePhotoProfileUsecase } from '../../../application/usecase/photoProfile.usecase';
+import { UploadedFile } from '../../../../../shared/domain/ports/storage.port';
+import { AppError } from '../../../../../shared/domain/errors/AppError';
 
 export class UserController {
   constructor(
@@ -23,6 +26,7 @@ export class UserController {
     private readonly suspendUC: SuspendUsecase,
     private readonly blockUC: BlockUsecase,
     private readonly updatePasswordUC: UpdatePasswordUsecase,
+    private readonly updatePhotoProfileUC: UpdatePhotoProfileUsecase,
     private readonly userPresenter: UserPresenter,
   ) {}
 
@@ -118,6 +122,24 @@ export class UserController {
 
     res.status(200).json({
       message: 'Password updated successfully',
+      data: this.userPresenter.one(user),
+    });
+  })
+
+  updatePhotoProfile = asyncHandler(async (req: Request, res: Response) => {
+    if (!req.file) throw new AppError('No file uploaded', 400, 'NO_FILE');
+
+    const file: UploadedFile = {
+      buffer: req.file.buffer,
+      mimetype: req.file.mimetype,
+      originalName: req.file.originalname,
+      size: req.file.size,
+    };
+
+    const user = await this.updatePhotoProfileUC.execute(req.user!.sub, file);
+
+    res.status(200).json({
+      message: 'Photo profile updated successfully',
       data: this.userPresenter.one(user),
     });
   })

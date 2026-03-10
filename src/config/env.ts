@@ -22,6 +22,12 @@ import 'dotenv/config';
     SMTP_PASS: z.string().min(1, 'SMTP_PASS is required'),
     SMTP_FROM: z.string().default('Nexo <no-reply@nexo.app>'),
     FRONTEND_URL: z.string().url().default('http://localhost:3000'),
+    STORAGE_ENDPOINT: z.string().url('STORAGE_ENDPOINT must be a valid URL').optional(),
+    STORAGE_REGION: z.string().default('auto'),
+    STORAGE_ACCESS_KEY: z.string().min(1, 'STORAGE_ACCESS_KEY is required'),
+    STORAGE_SECRET_KEY: z.string().min(1, 'STORAGE_SECRET_KEY is required'),
+    STORAGE_BUCKET: z.string().min(1, 'STORAGE_BUCKET is required'),
+    STORAGE_PUBLIC_URL: z.string().url('STORAGE_PUBLIC_URL must be a valid URL'),
 })
 
 export const env = envSchema.parse(process.env)

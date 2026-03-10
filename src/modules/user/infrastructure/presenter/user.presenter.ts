@@ -1,4 +1,5 @@
 import { Role, UserEntity, UserStatus } from '../../domain/entities/user.entity';
+import { env } from '../../../../config/env';
 
 export interface UserResponse {
   id: string;
@@ -17,6 +18,10 @@ export class UserPresenter {
   one(user: UserEntity): UserResponse {
     const primitives = user.toPrimitives();
 
+    const avatarUrl = primitives.photoProfile
+      ? `${env.STORAGE_PUBLIC_URL}/${primitives.photoProfile}`
+      : null;
+
     return {
       id: primitives.id,
       username: primitives.username,
@@ -25,7 +30,7 @@ export class UserPresenter {
       lastName: primitives.lastName,
       role: primitives.role,
       status: primitives.status,
-      avatarUrl: primitives.photoProfile ?? null,
+      avatarUrl,
       createdAt: primitives.createdAt,
       updatedAt: primitives.updatedAt,
     };
