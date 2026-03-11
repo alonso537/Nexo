@@ -393,7 +393,7 @@ export class UserEntity {
 
   private ensureNotSuspended(): void {
     if (this._status === 'SUSPENDED') {
-      throw new AppError('Your account is suspended', 402, 'USER_SUSPENDED');
+      throw new AppError('Your account is suspended', 403, 'USER_SUSPENDED');
     }
   }
 

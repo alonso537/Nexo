@@ -36,6 +36,7 @@ export class UserRepositoryImpl implements UserrepositoryDomain {
                 : null,
             blockedAt: data.blockedAt,
             blockedReason: data.blockedReason,
+            tokenVersion: data.tokenVersion,
             createdAt: data.createdAt,
             updatedAt: data.updatedAt,
             deletedAt: data.deletedAt,

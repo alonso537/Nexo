@@ -48,7 +48,7 @@ export class RefreshTokenUsecase {
         }
 
         const accessToken = await this.tokenPort.sign(
-            { sub: data.id, role: data.role },
+            { sub: data.id, role: data.role, tokenVersion: data.tokenVersion },
             env.JWT_ACCESS_TTL,
         );
 

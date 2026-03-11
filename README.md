@@ -138,17 +138,34 @@ Base URL: `/api`
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
+| `GET` | `/` | ✅ ADMIN | Lista todos los usuarios con paginación y filtros |
+| `GET` | `/:username` | ✅ Bearer | Obtiene un usuario por su username |
 | `PATCH` | `/name` | ✅ Bearer | Actualiza el nombre del usuario |
 | `PATCH` | `/last-name` | ✅ Bearer | Actualiza el apellido del usuario |
 | `PATCH` | `/username` | ✅ Bearer | Actualiza el nombre de usuario |
 | `PATCH` | `/email` | ✅ Bearer | Actualiza el email y envía verificación al nuevo correo |
 | `PATCH` | `/password` | ✅ Bearer | Cambia la contraseña (requiere contraseña actual) |
 | `PATCH` | `/avatar` | ✅ Bearer | Sube o reemplaza la foto de perfil (`multipart/form-data`, campo `avatar`) |
+| `DELETE` | `/avatar` | ✅ Bearer | Elimina la foto de perfil |
 | `PATCH` | `/:id/role` | ✅ ADMIN | Cambia el rol de un usuario a `USER` o `SUPPORT` |
 | `PATCH` | `/:id/role/admin` | ✅ SUPER_ADMIN | Cambia el rol de un usuario a `ADMIN`, `USER` o `SUPPORT` |
 | `PATCH` | `/:id/status/deactivate` | ✅ ADMIN | Desactiva la cuenta de un usuario |
 | `PATCH` | `/:id/status/suspend` | ✅ ADMIN | Suspende la cuenta de un usuario |
 | `PATCH` | `/:id/status/block` | ✅ SUPER_ADMIN | Bloquea la cuenta de un usuario (requiere motivo) |
+
+#### Parámetros de filtrado para `GET /api/user/`
+
+| Parámetro | Tipo | Descripción |
+|---|---|---|
+| `page` | `number` | Página (default: `1`) |
+| `limit` | `number` | Resultados por página (default: `10`) |
+| `username` | `string` | Filtrar por username (búsqueda parcial) |
+| `email` | `string` | Filtrar por email (búsqueda parcial) |
+| `name` | `string` | Filtrar por nombre (búsqueda parcial) |
+| `lastName` | `string` | Filtrar por apellido (búsqueda parcial) |
+| `role` | `string` | Filtrar por rol exacto |
+| `status` | `string` | Filtrar por estado exacto |
+| `includeDeleted` | `boolean` | Incluir usuarios eliminados (soft-delete) |
 
 ---
 
@@ -161,4 +178,17 @@ El proyecto sigue **Clean Architecture** con las siguientes capas:
 - **Infrastructure** — Implementaciones concretas (MongoDB, JWT, bcrypt, S3, etc.).
 
 Las reglas de dependencia fluyen siempre hacia adentro: `Infrastructure → Application → Domain`.
+
+---
+
+## Seguridad
+
+- **Helmet** — cabeceras HTTP seguras en todas las respuestas
+- **Rate limiting** — global 100 req/15 min; rutas de auth 10 req/15 min
+- **Session invalidation** — cada token lleva `tokenVersion`; al hacer logout, bloquear, suspender, desactivar o cambiar contraseña/email se incrementa la versión en la DB, invalidando todos los tokens anteriores de forma inmediata
+- **Request ID** — cada request recibe un `x-request-id` único propagado en las respuestas (útil para trazabilidad)
+- **Cookies** — `httpOnly`, `secure` (configurable), `sameSite: lax/none`
+- **Validación** — todos los inputs validados con Zod antes de llegar a los casos de uso; los strings se sanitizan con `.trim()`
+- **ReDoS** — los campos de búsqueda con regex escapan caracteres especiales antes de pasarlos a MongoDB
+- **Soft delete** — los usuarios eliminados no se exponen en las consultas por defecto
 
