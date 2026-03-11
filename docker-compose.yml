@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
       target: production
     ports:
-      - "${PORT:-3000}:3000"
+      - "${PORT:-8000}:${PORT:-8000}"
     environment:
       NODE_ENV: production
     env_file:
