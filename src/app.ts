@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 
 import { env } from './config/env';
 import { errorMiddleware } from './shared/infrastructure/errors/errorMiddleware';
+import { requestId } from './shared/infrastructure/http/express/middleware/requestId.middleware';
 //rutas
 import { authRoutes } from './modules/user/infrastructure/http/routes/auth.routes';
 import { userRoutes } from './modules/user/infrastructure/http/routes/user.routes';
@@ -15,6 +16,7 @@ export const createApp = () => {
     const app = express()
 
     //middlewares
+    app.use(requestId);
     app.use(helmet());
     app.use(cors({
         origin: env.CORS_ORIGINS.split(','),
@@ -25,11 +27,20 @@ export const createApp = () => {
     app.use(cookieParser(env.SECRET))
 
     app.use(rateLimit({
-        windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 100, // limit each IP to 100 requests per windowMs
-        standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-        legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+        windowMs: 15 * 60 * 1000,
+        max: 100,
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { status: 'error', code: 'TOO_MANY_REQUESTS', message: 'Too many requests, please try again later.' },
     }))
+
+    const authLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 10,
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { status: 'error', code: 'TOO_MANY_REQUESTS', message: 'Too many attempts, please try again later.' },
+    })
 
     //rutas
     app.get('/health', (_req, res) => {
@@ -37,7 +48,7 @@ export const createApp = () => {
     });
 
     // Rutas de autenticación
-    app.use('/api/auth', authRoutes);
+    app.use('/api/auth', authLimiter, authRoutes);
     app.use('/api/user', userRoutes);
 
     app.use(errorMiddleware);

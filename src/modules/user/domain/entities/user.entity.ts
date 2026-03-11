@@ -256,6 +256,12 @@ export class UserEntity {
     this.touch();
   }
 
+  public removePhotoProfile(): void {
+    this.ensureNotDeleted();
+    this.photoProfile = null;
+    this.touch();
+  }
+
   public incrementTokenVersion(): void {
     this.ensureNotDeleted();
     this.tokenVersion++;

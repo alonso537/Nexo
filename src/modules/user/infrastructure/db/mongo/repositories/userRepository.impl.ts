@@ -97,16 +97,16 @@ export class UserRepositoryImpl implements UserrepositoryDomain {
             }
 
             if (filters?.username) {
-                query.username = { $regex: filters.username, $options: 'i' };
+                query.username = { $regex: filters.username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
             }
             if (filters?.email) {
-                query.email = { $regex: filters.email, $options: 'i' };
+                query.email = { $regex: filters.email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
             }
             if (filters?.name) {
-                query.name = { $regex: filters.name, $options: 'i' };
+                query.name = { $regex: filters.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
             }
             if (filters?.lastName) {
-                query.lastName = { $regex: filters.lastName, $options: 'i' };
+                query.lastName = { $regex: filters.lastName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
             }
             if (filters?.role) {
                 query.role = filters.role;

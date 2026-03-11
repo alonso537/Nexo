@@ -1,0 +1,17 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [master, main]
+
+jobs:
+  docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build --target production -t nexo:${{ github.sha }} .

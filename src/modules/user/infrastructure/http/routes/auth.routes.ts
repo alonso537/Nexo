@@ -3,7 +3,6 @@ import { validate } from '../../../../../shared/infrastructure/http/express/midd
 import { RegisterUserSchema } from '../../../application/dto/registerUser.dto';
 import { container } from '../../../../../config/container';
 import { LoginUserSchema } from '../../../application/dto/loginUser.dto';
-import { authenticate } from '../../../../../shared/infrastructure/http/express/middleware/authenticate.middleware';
 import { verifyEmailSchema } from '../../../application/dto/verifyEmail.dto';
 import { ForgotPasswordSchema } from '../../../application/dto/forgotPassword.dto';
 import { ResetPasswordSchema } from '../../../application/dto/resetPassword.dto';
@@ -12,6 +11,7 @@ import { ResendVerificationSchema } from '../../../application/dto/resendToken.d
 export const authRoutes = Router();
 
 const auth = container.AuthController;
+const authenticate = container.authenticate;
 
 authRoutes.post('/register', validate(RegisterUserSchema), auth.register);
 authRoutes.post('/login', validate(LoginUserSchema), auth.login);

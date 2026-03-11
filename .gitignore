@@ -47,3 +47,6 @@ coverage/
 *.sw?
 .DS_Store
 Thumbs.db
+
+# Postman
+postman/

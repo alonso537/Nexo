@@ -14,6 +14,10 @@ import { UpdatePasswordUsecase } from '../../../application/usecase/UpdatePasswo
 import { UpdatePhotoProfileUsecase } from '../../../application/usecase/photoProfile.usecase';
 import { UploadedFile } from '../../../../../shared/domain/ports/storage.port';
 import { AppError } from '../../../../../shared/domain/errors/AppError';
+import { GetUserBySlugUsecase } from '../../../application/usecase/getUserBySlug.usecase';
+import { GetAllUsersUsecase } from '../../../application/usecase/getAllUser.usecase';
+import { FilterUsersSchema } from '../../../application/dto/filterUsers.dto';
+import { DeleteAvatarUsecase } from '../../../application/usecase/deleteAvatar.usecase';
 
 export class UserController {
   constructor(
@@ -27,6 +31,9 @@ export class UserController {
     private readonly blockUC: BlockUsecase,
     private readonly updatePasswordUC: UpdatePasswordUsecase,
     private readonly updatePhotoProfileUC: UpdatePhotoProfileUsecase,
+    private readonly getUserBySlugUC: GetUserBySlugUsecase,
+    private readonly getAllUsersUC: GetAllUsersUsecase,
+    private readonly deleteAvatarUC: DeleteAvatarUsecase,
     private readonly userPresenter: UserPresenter,
   ) {}
 
@@ -140,6 +147,44 @@ export class UserController {
 
     res.status(200).json({
       message: 'Photo profile updated successfully',
+      data: this.userPresenter.one(user),
+    });
+  })
+
+  getUserBySlug = asyncHandler(async (req: Request, res: Response) => {
+    const { username } = req.params;
+
+    const user = await this.getUserBySlugUC.execute({ username: username.toString() });
+
+    res.status(200).json({
+      message: 'User retrieved successfully',
+      data: this.userPresenter.one(user),
+    });
+  })
+
+  getAllUsers = asyncHandler(async (req: Request, res: Response) => {
+    const filters = FilterUsersSchema.parse({ query: req.query }).query;
+
+    const result = await this.getAllUsersUC.execute(filters);
+
+    res.status(200).json({
+      message: 'Users retrieved successfully',
+      data: result.data.map((user) => this.userPresenter.one(user)),
+      meta: {
+        total: result.total,
+        page: result.page,
+        totalPages: result.totalPages,
+        hasNextPage: result.hasNextPage,
+        hasPreviousPage: result.hasPreviousPage,
+      },
+    });
+  })
+
+  deleteAvatar = asyncHandler(async (req: Request, res: Response) => {
+    const user = await this.deleteAvatarUC.execute(req.user!.sub);
+
+    res.status(200).json({
+      message: 'Avatar deleted successfully',
       data: this.userPresenter.one(user),
     });
   })

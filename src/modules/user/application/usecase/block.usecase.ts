@@ -22,6 +22,7 @@ export class BlockUsecase {
         }
 
         user.block(reason);
+        user.incrementTokenVersion();
         await this.userRep.save(user);
         return user;
     }

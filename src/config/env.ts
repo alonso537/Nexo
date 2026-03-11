@@ -21,7 +21,7 @@ import 'dotenv/config';
     SMTP_USER: z.string().min(1, 'SMTP_USER is required'),
     SMTP_PASS: z.string().min(1, 'SMTP_PASS is required'),
     SMTP_FROM: z.string().default('Nexo <no-reply@nexo.app>'),
-    FRONTEND_URL: z.string().url().default('http://localhost:3000'),
+    FRONTEND_URL: z.string().url().default('http://localhost:8000/api/auth'),
     STORAGE_ENDPOINT: z.string().url('STORAGE_ENDPOINT must be a valid URL').optional(),
     STORAGE_REGION: z.string().default('auto'),
     STORAGE_ACCESS_KEY: z.string().min(1, 'STORAGE_ACCESS_KEY is required'),

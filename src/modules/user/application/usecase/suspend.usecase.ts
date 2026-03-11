@@ -20,6 +20,7 @@ export class SuspendUsecase {
         }
 
         user.suspend();
+        user.incrementTokenVersion();
         await this.userRep.save(user);
         return user;
     }

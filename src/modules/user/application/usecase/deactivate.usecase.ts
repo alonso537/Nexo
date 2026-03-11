@@ -20,6 +20,7 @@ export class DeactivateUsecase {
         }
 
         user.deactivate();
+        user.incrementTokenVersion();
         await this.userRep.save(user);
         return user;
     }

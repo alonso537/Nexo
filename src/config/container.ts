@@ -16,6 +16,8 @@ import { UpdateNameUsecase } from '../modules/user/application/usecase/updateNam
 import { UpdatePasswordUsecase } from '../modules/user/application/usecase/UpdatePassword.usecase';
 import { UpdateUsernameUsecase } from '../modules/user/application/usecase/updateUsername.usecase';
 import { UpdatePhotoProfileUsecase } from '../modules/user/application/usecase/photoProfile.usecase';
+import { GetUserBySlugUsecase } from '../modules/user/application/usecase/getUserBySlug.usecase';
+import { GetAllUsersUsecase } from '../modules/user/application/usecase/getAllUser.usecase';
 import { VerifyEmailUsecase } from '../modules/user/application/usecase/verifyEmail.usecase';
 import { UserRepositoryImpl } from '../modules/user/infrastructure/db/mongo/repositories/userRepository.impl';
 import { NodemailerAdapter } from '../modules/user/infrastructure/email/nodemailer.adapter';
@@ -25,6 +27,8 @@ import { UserPresenter } from '../modules/user/infrastructure/presenter/user.pre
 import { BcryptAdapter } from '../modules/user/infrastructure/security/BcryptAdapter.adapter';
 import { JwtAdapter } from '../modules/user/infrastructure/security/JwtAdapter.adapter';
 import { S3Adapter } from '../shared/infrastructure/storage/s3.adapter';
+import { makeAuthenticate } from '../shared/infrastructure/http/express/middleware/authenticate.middleware';
+import { DeleteAvatarUsecase } from '../modules/user/application/usecase/deleteAvatar.usecase';
 
 class Container {
   //services
@@ -57,6 +61,9 @@ class Container {
   private blockUC = new BlockUsecase(this.userRep);
   private updatePasswordUC = new UpdatePasswordUsecase(this.userRep, this.passwordService);
   private updatePhotoProfileUC = new UpdatePhotoProfileUsecase(this.userRep, this.storageService);
+  private getUserBySlugUC = new GetUserBySlugUsecase(this.userRep);
+  private getAllUsersUC = new GetAllUsersUsecase(this.userRep);
+  private deleteAvatarUC = new DeleteAvatarUsecase(this.userRep, this.storageService);
   //presenters
   private userPresenter = new UserPresenter();
   //controllers
@@ -83,6 +90,10 @@ class Container {
     this.blockUC,
     this.updatePasswordUC,
     this.updatePhotoProfileUC,
+    this.getUserBySlugUC,
+    this.getAllUsersUC,
+    this.deleteAvatarUC,
+
     this.userPresenter
   )
 
@@ -92,6 +103,10 @@ class Container {
 
   get UserController() {
     return this.userController;
+  }
+
+  get authenticate() {
+    return makeAuthenticate(this.userRep);
   }
 }
 
