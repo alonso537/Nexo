@@ -3,6 +3,8 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
+import { openapi } from './shared/infrastructure/http/docs/swagger';
 
 import { env } from './config/env';
 import { errorMiddleware } from './shared/infrastructure/errors/errorMiddleware';
@@ -41,6 +43,8 @@ export const createApp = () => {
         legacyHeaders: false,
         message: { status: 'error', code: 'TOO_MANY_REQUESTS', message: 'Too many attempts, please try again later.' },
     })
+
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapi))
 
     //rutas
     app.get('/health', (_req, res) => {
