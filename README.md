@@ -1,6 +1,7 @@
+src/
 # Nexo API
 
-REST API construida con Node.js, Express y TypeScript siguiendo los principios de **Clean Architecture** y **Domain-Driven Design (DDD)**.
+REST API built with Node.js, Express, and TypeScript, following **Clean Architecture** and **Domain-Driven Design (DDD)** principles. All user-facing text and documentation are in English for portfolio/demo purposes.
 
 ---
 
@@ -8,51 +9,51 @@ REST API construida con Node.js, Express y TypeScript siguiendo los principios d
 
 - **Runtime:** Node.js 22
 - **Framework:** Express 5
-- **Lenguaje:** TypeScript (strict)
-- **Base de datos:** MongoDB + Mongoose
-- **Autenticación:** JWT (access + refresh tokens)
+- **Language:** TypeScript (strict)
+- **Database:** MongoDB + Mongoose
+- **Authentication:** JWT (access + refresh tokens)
 - **Hashing:** bcryptjs
-- **Validación:** Zod
-- **Email:** Nodemailer (SMTP)
-- **Almacenamiento:** AWS S3 / Cloudflare R2 (`@aws-sdk/client-s3`)
-- **Subida de archivos:** Multer
+- **Validation:** Zod
+- **Email:** Nodemailer (SMTP, HTML templates)
+- **Storage:** AWS S3 / Cloudflare R2 (`@aws-sdk/client-s3`)
+- **File Uploads:** Multer
 - **Logger:** Pino
 - **Testing:** Vitest
-- **Contenedores:** Docker + Docker Compose
+- **Containers:** Docker + Docker Compose
 
 ---
 
-## Estructura del proyecto
+## Project Structure
 
 ```
 src/
-├── config/           # Variables de entorno (Zod) y contenedor de dependencias
-├── modules/          # Módulos de negocio (DDD)
+├── config/           # Environment variables (Zod) and dependency container
+├── modules/          # Business modules (DDD)
 │   └── user/
-│       ├── domain/       # Entidades, VOs, puertos, repositorio (interfaz)
-│       ├── application/  # Casos de uso y DTOs
-│       └── infrastructure/ # Modelo Mongoose, mapper, repositorio, adaptadores JWT/bcrypt/email, controller, presenter
-└── shared/           # Código compartido entre módulos
-    ├── domain/           # AppError, VOs base
-    └── infrastructure/   # Logger, middlewares, rutas, asyncHandler, S3Adapter
+│       ├── domain/           # Entities, VOs, ports, repository (interface)
+│       ├── application/      # Use cases and DTOs
+│       └── infrastructure/   # Mongoose model, mapper, repository, JWT/bcrypt/email adapters, controller, presenter
+└── shared/           # Code shared between modules
+    ├── domain/           # AppError, base VOs
+    └── infrastructure/   # Logger, middlewares, routes, asyncHandler, S3Adapter
 ```
 
 ---
 
-## Requisitos
+## Requirements
 
 - Node.js >= 22
-- MongoDB corriendo localmente o via Docker
+- MongoDB running locally or via Docker
 
 ---
 
-## Instalación
+## Installation
 
 ```bash
 npm install
 ```
 
-Copia el archivo de entorno y ajusta los valores:
+Copy the environment file and adjust the values:
 
 ```bash
 cp .env.example .env
@@ -62,57 +63,56 @@ cp .env.example .env
 
 ## Scripts
 
-| Comando | Descripción |
+| Command | Description |
 |---|---|
-| `npm run dev` | Inicia en modo desarrollo con hot reload |
-| `npm run build` | Compila TypeScript a `dist/` |
-| `npm start` | Ejecuta el build de producción |
-| `npm test` | Corre los tests |
-| `npm run test:watch` | Tests en modo watch |
-| `npm run lint` | Linting con ESLint |
-| `npm run format` | Formatea el código con Prettier |
+| `npm run dev` | Start in development mode with hot reload |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm start` | Run the production build |
+| `npm test` | Run all tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run lint` | Lint with ESLint |
+| `npm run format` | Format code with Prettier |
 
 ---
 
 ## Docker
 
-Levantar la app en contenedor:
-
+To run the app in a container:
 ```bash
 docker compose up --build
 ```
 
 ---
 
-## Variables de entorno
+## Environment Variables
 
-Ver [.env.example](.env.example) para la lista completa de variables requeridas.
+See [.env.example](.env.example) for the full list of required variables.
 
-| Variable | Descripción | Default |
+| Variable | Description | Default |
 |---|---|---|
-| `NODE_ENV` | Entorno de ejecución | `development` |
-| `PORT` | Puerto del servidor | `3000` |
-| `MONGO_URI` | URI de conexión a MongoDB | — |
-| `SECRET` | Secret general (cookie parser) | — |
-| `JWT_ACCESS_SECRET` | Secret para firmar access tokens | — |
-| `JWT_REFRESH_SECRET` | Secret para firmar refresh tokens | — |
-| `JWT_ACCESS_TTL` | TTL del access token | `15m` |
-| `JWT_REFRESH_TTL` | TTL del refresh token | `7d` |
-| `COOKIE_SECURE` | Cookies solo HTTPS | `false` |
-| `COOKIE_DOMAIN` | Dominio de las cookies | — |
-| `CORS_ORIGINS` | Orígenes permitidos (separados por coma) | — |
-| `SMTP_HOST` | Host del servidor SMTP | — |
-| `SMTP_PORT` | Puerto SMTP | `587` |
-| `SMTP_USER` | Usuario SMTP | — |
-| `SMTP_PASS` | Contraseña SMTP | — |
-| `SMTP_FROM` | Dirección remitente | `Nexo <no-reply@nexo.app>` |
-| `FRONTEND_URL` | URL base del frontend (para links en emails) | `http://localhost:3000` |
-| `STORAGE_ENDPOINT` | Endpoint S3-compatible (requerido para R2, omitir para AWS S3) | — |
-| `STORAGE_REGION` | Región del bucket | `auto` |
+| `NODE_ENV` | Environment | `development` |
+| `PORT` | Server port | `3000` |
+| `MONGO_URI` | MongoDB connection URI | — |
+| `SECRET` | General secret (cookie parser) | — |
+| `JWT_ACCESS_SECRET` | Secret for signing access tokens | — |
+| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens | — |
+| `JWT_ACCESS_TTL` | Access token TTL | `15m` |
+| `JWT_REFRESH_TTL` | Refresh token TTL | `7d` |
+| `COOKIE_SECURE` | Cookies only HTTPS | `false` |
+| `COOKIE_DOMAIN` | Cookie domain | — |
+| `CORS_ORIGINS` | Allowed origins (comma-separated) | — |
+| `SMTP_HOST` | SMTP server host | — |
+| `SMTP_PORT` | SMTP port | `587` |
+| `SMTP_USER` | SMTP user | — |
+| `SMTP_PASS` | SMTP password | — |
+| `SMTP_FROM` | Sender address | `Nexo <no-reply@nexo.app>` |
+| `FRONTEND_URL` | Frontend base URL (for email links) | `http://localhost:3000` |
+| `STORAGE_ENDPOINT` | S3-compatible endpoint (required for R2, omit for AWS S3) | — |
+| `STORAGE_REGION` | Bucket region | `auto` |
 | `STORAGE_ACCESS_KEY` | Access Key ID | — |
 | `STORAGE_SECRET_KEY` | Secret Access Key | — |
-| `STORAGE_BUCKET` | Nombre del bucket | — |
-| `STORAGE_PUBLIC_URL` | URL pública base del bucket | — |
+| `STORAGE_BUCKET` | Bucket name | — |
+| `STORAGE_PUBLIC_URL` | Public base URL for bucket | — |
 
 ---
 
@@ -122,73 +122,74 @@ Base URL: `/api`
 
 ### Auth — `/api/auth`
 
-| Método | Ruta | Auth | Descripción |
+| Method | Path | Auth | Description |
 |---|---|---|---|
-| `POST` | `/register` | — | Registra un nuevo usuario |
-| `POST` | `/login` | — | Inicia sesión, devuelve access token y cookie de refresh |
-| `GET` | `/me` | ✅ Bearer | Devuelve el usuario autenticado |
-| `POST` | `/refresh-token` | Cookie | Emite un nuevo access token |
-| `POST` | `/logout` | ✅ Bearer | Invalida la sesión y limpia la cookie |
-| `GET` | `/verify-email` | — | Verifica el email con el token recibido por correo (`?token=`) |
-| `POST` | `/resend-verification` | — | Reenvía el correo de verificación |
-| `POST` | `/forgot-password` | — | Solicita el enlace de recuperación de contraseña |
-| `POST` | `/reset-password` | — | Restablece la contraseña con el token recibido por correo (`?token=`) |
+| `POST` | `/register` | — | Register a new user |
+| `POST` | `/login` | — | Login, returns access token and refresh cookie |
+| `GET` | `/me` | ✅ Bearer | Returns the authenticated user |
+| `POST` | `/refresh-token` | Cookie | Issues a new access token |
+| `POST` | `/logout` | ✅ Bearer | Invalidates the session and clears the cookie |
+| `GET` | `/verify-email` | — | Verifies email with the token sent by email (`?token=`) |
+| `POST` | `/resend-verification` | — | Resends the verification email |
+| `POST` | `/forgot-password` | — | Requests password reset link |
+| `POST` | `/reset-password` | — | Resets password with the token sent by email (`?token=`) |
 
 ### User — `/api/user`
 
-| Método | Ruta | Auth | Descripción |
+| Method | Path | Auth | Description |
 |---|---|---|---|
-| `GET` | `/` | ✅ ADMIN | Lista todos los usuarios con paginación y filtros |
-| `GET` | `/:username` | ✅ Bearer | Obtiene un usuario por su username |
-| `PATCH` | `/name` | ✅ Bearer | Actualiza el nombre del usuario |
-| `PATCH` | `/last-name` | ✅ Bearer | Actualiza el apellido del usuario |
-| `PATCH` | `/username` | ✅ Bearer | Actualiza el nombre de usuario |
-| `PATCH` | `/email` | ✅ Bearer | Actualiza el email y envía verificación al nuevo correo |
-| `PATCH` | `/password` | ✅ Bearer | Cambia la contraseña (requiere contraseña actual) |
-| `PATCH` | `/avatar` | ✅ Bearer | Sube o reemplaza la foto de perfil (`multipart/form-data`, campo `avatar`) |
-| `DELETE` | `/avatar` | ✅ Bearer | Elimina la foto de perfil |
-| `PATCH` | `/:id/role` | ✅ ADMIN | Cambia el rol de un usuario a `USER` o `SUPPORT` |
-| `PATCH` | `/:id/role/admin` | ✅ SUPER_ADMIN | Cambia el rol de un usuario a `ADMIN`, `USER` o `SUPPORT` |
-| `PATCH` | `/:id/status/deactivate` | ✅ ADMIN | Desactiva la cuenta de un usuario |
-| `PATCH` | `/:id/status/suspend` | ✅ ADMIN | Suspende la cuenta de un usuario |
-| `PATCH` | `/:id/status/block` | ✅ SUPER_ADMIN | Bloquea la cuenta de un usuario (requiere motivo) |
+| `GET` | `/` | ✅ ADMIN | List all users with pagination and filters |
+| `GET` | `/:username` | ✅ Bearer | Get a user by username |
+| `PATCH` | `/name` | ✅ Bearer | Update user's name |
+| `PATCH` | `/last-name` | ✅ Bearer | Update user's last name |
+| `PATCH` | `/username` | ✅ Bearer | Update username |
+| `PATCH` | `/email` | ✅ Bearer | Update email and send verification |
+| `PATCH` | `/password` | ✅ Bearer | Change password (requires current password) |
+| `PATCH` | `/avatar` | ✅ Bearer | Upload or replace profile picture (`multipart/form-data`, field `avatar`) |
+| `DELETE` | `/avatar` | ✅ Bearer | Delete profile picture |
+| `PATCH` | `/:id/role` | ✅ ADMIN | Change user role to `USER` or `SUPPORT` |
+| `PATCH` | `/:id/role/admin` | ✅ SUPER_ADMIN | Change user role to `ADMIN`, `USER`, or `SUPPORT` |
+| `PATCH` | `/:id/status/deactivate` | ✅ ADMIN | Deactivate user account |
+| `PATCH` | `/:id/status/suspend` | ✅ ADMIN | Suspend user account |
+| `PATCH` | `/:id/status/block` | ✅ SUPER_ADMIN | Block user account (requires reason) |
 
-#### Parámetros de filtrado para `GET /api/user/`
+#### Filtering parameters for `GET /api/user/`
 
-| Parámetro | Tipo | Descripción |
+| Parameter | Type | Description |
 |---|---|---|
-| `page` | `number` | Página (default: `1`) |
-| `limit` | `number` | Resultados por página (default: `10`) |
-| `username` | `string` | Filtrar por username (búsqueda parcial) |
-| `email` | `string` | Filtrar por email (búsqueda parcial) |
-| `name` | `string` | Filtrar por nombre (búsqueda parcial) |
-| `lastName` | `string` | Filtrar por apellido (búsqueda parcial) |
-| `role` | `string` | Filtrar por rol exacto |
-| `status` | `string` | Filtrar por estado exacto |
-| `includeDeleted` | `boolean` | Incluir usuarios eliminados (soft-delete) |
+| `page` | `number` | Page (default: `1`) |
+| `limit` | `number` | Results per page (default: `10`) |
+| `username` | `string` | Filter by username (partial match) |
+| `email` | `string` | Filter by email (partial match) |
+| `name` | `string` | Filter by name (partial match) |
+| `lastName` | `string` | Filter by last name (partial match) |
+| `role` | `string` | Filter by exact role |
+| `status` | `string` | Filter by exact status |
+| `includeDeleted` | `boolean` | Include soft-deleted users |
 
 ---
 
-## Arquitectura
+## Architecture
 
-El proyecto sigue **Clean Architecture** con las siguientes capas:
+This project follows **Clean Architecture** with the following layers:
 
-- **Domain** — Entidades, Value Objects, puertos (interfaces). Sin dependencias externas.
-- **Application** — Casos de uso. Solo depende del dominio.
-- **Infrastructure** — Implementaciones concretas (MongoDB, JWT, bcrypt, S3, etc.).
+- **Domain** — Entities, Value Objects, ports (interfaces). No external dependencies.
+- **Application** — Use cases. Depends only on domain.
+- **Infrastructure** — Concrete implementations (MongoDB, JWT, bcrypt, S3, etc.).
 
-Las reglas de dependencia fluyen siempre hacia adentro: `Infrastructure → Application → Domain`.
+Dependency rules always flow inward: `Infrastructure → Application → Domain`.
 
 ---
 
-## Seguridad
+## Security
 
-- **Helmet** — cabeceras HTTP seguras en todas las respuestas
-- **Rate limiting** — global 100 req/15 min; rutas de auth 10 req/15 min
-- **Session invalidation** — cada token lleva `tokenVersion`; al hacer logout, bloquear, suspender, desactivar o cambiar contraseña/email se incrementa la versión en la DB, invalidando todos los tokens anteriores de forma inmediata
-- **Request ID** — cada request recibe un `x-request-id` único propagado en las respuestas (útil para trazabilidad)
+- **Helmet** — Secure HTTP headers on all responses
+- **Rate limiting** — global 100 req/15 min; auth routes 10 req/15 min
+- **Session invalidation** — each token has a `tokenVersion`; on logout, block, suspend, deactivate, or password/email change, the version is incremented in the DB, invalidating all previous tokens immediately
+- **Request ID** — each request receives a unique `x-request-id` propagated in responses (useful for tracing)
 - **Cookies** — `httpOnly`, `secure` (configurable), `sameSite: lax/none`
-- **Validación** — todos los inputs validados con Zod antes de llegar a los casos de uso; los strings se sanitizan con `.trim()`
-- **ReDoS** — los campos de búsqueda con regex escapan caracteres especiales antes de pasarlos a MongoDB
+- **Validation** — all inputs validated with Zod before reaching use cases; strings are sanitized with `.trim()`
+- **ReDoS** — search fields with regex escape special characters before passing to MongoDB
+- **Soft delete** — deleted users are not exposed in queries by default
 - **Soft delete** — los usuarios eliminados no se exponen en las consultas por defecto
 
