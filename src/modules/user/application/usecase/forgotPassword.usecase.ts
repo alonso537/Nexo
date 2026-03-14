@@ -19,8 +19,8 @@ export class ForgotPasswordUsecase {
 
     await this.userRep.save(user);
     await this.mailPort.sendPasswordResetEmail(
-      (user.toPersistence().email as string),
-      ((user.toPersistence().passwordResetToken as { value: string } | null)?.value as string),
+      user.toPersistence().email as string,
+      (user.toPersistence().passwordResetToken as { value: string } | null)?.value as string,
     );
   }
 }

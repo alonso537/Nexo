@@ -11,13 +11,13 @@ export type UserStatus = 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BLOC
 export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'USER' | 'SUPPORT';
 
 export class UserEntity {
-    public getEmail(): string {
-      return this.email.value;
-    }
+  public getEmail(): string {
+    return this.email.value;
+  }
 
-    public getVerificationTokenValue(): string | null {
-      return this.verificationToken ? this.verificationToken.value : null;
-    }
+  public getVerificationTokenValue(): string | null {
+    return this.verificationToken ? this.verificationToken.value : null;
+  }
   private constructor(
     private readonly id: UserIdVO,
     private name: PersonNameVO | null,

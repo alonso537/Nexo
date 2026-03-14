@@ -17,8 +17,8 @@ export class ResendVerificationUsecase {
 
     await this.userRep.save(user);
     await this.mailPort.sendVerificationEmail(
-      (user.toPersistence().email as string),
-      ((user.toPersistence().verificationToken as { value: string } | null)?.value as string),
+      user.toPersistence().email as string,
+      (user.toPersistence().verificationToken as { value: string } | null)?.value as string,
     );
   }
 }

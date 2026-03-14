@@ -32,10 +32,7 @@ export class RegisterUserUsecase {
 
     await this.userRep.save(user);
 
-    await this.mailPort.sendVerificationEmail(
-      user.getEmail(),
-      user.getVerificationTokenValue()!,
-    );
+    await this.mailPort.sendVerificationEmail(user.getEmail(), user.getVerificationTokenValue()!);
 
     return user;
   }

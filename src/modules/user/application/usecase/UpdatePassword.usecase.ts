@@ -20,7 +20,7 @@ export class UpdatePasswordUsecase {
     }
     const match = await this.passwordPort.compare(
       currentPassword,
-      (user.toPersistence().passwordHash as string),
+      user.toPersistence().passwordHash as string,
     );
 
     if (!match) {
