@@ -21,6 +21,10 @@ jobs:
           node-version: 22
           cache: npm
 
+
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+
       - name: Install dependencies
         run: npm ci
 
