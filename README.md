@@ -75,12 +75,42 @@ cp .env.example .env
 
 ---
 
+
 ## Docker
 
-To run the app in a container:
+To run the app in a container locally:
 ```bash
 docker compose up --build
 ```
+
+---
+
+## GitHub Actions: Build & Push Docker Image to GHCR
+
+This project includes a GitHub Actions workflow that automatically builds and pushes a Docker image to GitHub Container Registry (GHCR) on every push to the `main` branch.
+
+**How it works:**
+
+- The workflow is defined in `.github/workflows/docker-ghcr.yml`.
+- On every push to `main`, GitHub Actions will:
+    1. Build the Docker image using your `Dockerfile`.
+    2. Authenticate to GHCR using the repository's GitHub token.
+    3. Push the image to `ghcr.io/<your-username>/<your-repo>:latest`.
+
+**Requirements:**
+
+- Your repository must be hosted on GitHub.
+- You must have a valid `Dockerfile` in the root of your project.
+- The workflow uses the built-in `GITHUB_TOKEN` for authentication (no extra secrets needed).
+
+**How to use:**
+
+1. Push your code to the `main` branch on GitHub.
+2. The workflow will run automatically. You can check progress in the "Actions" tab of your repository.
+3. Your Docker image will be available at:
+     `ghcr.io/<your-username>/<your-repo>:latest`
+
+For more information, see the [GitHub Container Registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
 
 ---
 
