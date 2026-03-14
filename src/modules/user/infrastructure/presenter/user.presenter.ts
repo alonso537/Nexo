@@ -18,21 +18,21 @@ export class UserPresenter {
   one(user: UserEntity): UserResponse {
     const primitives = user.toPrimitives();
 
-    const avatarUrl = primitives.photoProfile
-      ? `${env.STORAGE_PUBLIC_URL}/${primitives.photoProfile}`
+    const avatarUrl = (primitives.photoProfile as string | null)
+      ? `${env.STORAGE_PUBLIC_URL}/${primitives.photoProfile as string}`
       : null;
 
     return {
-      id: primitives.id,
-      username: primitives.username,
-      email: primitives.email,
-      name: primitives.name,
-      lastName: primitives.lastName,
-      role: primitives.role,
-      status: primitives.status,
+      id: primitives.id as string,
+      username: primitives.username as string,
+      email: primitives.email as string,
+      name: primitives.name as string | null,
+      lastName: primitives.lastName as string | null,
+      role: primitives.role as Role,
+      status: primitives.status as UserStatus,
       avatarUrl,
-      createdAt: primitives.createdAt,
-      updatedAt: primitives.updatedAt,
+      createdAt: primitives.createdAt as Date,
+      updatedAt: primitives.updatedAt as Date,
     };
   }
 

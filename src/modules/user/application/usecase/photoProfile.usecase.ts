@@ -15,7 +15,7 @@ export class UpdatePhotoProfileUsecase {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
 
-    const oldAvatarKey = user.toPrimitives().photoProfile;
+    const oldAvatarKey = user.toPrimitives().photoProfile as string | null;
     if (oldAvatarKey) {
       await this.storagePort.delete(oldAvatarKey);
     }

@@ -15,7 +15,7 @@ export class DeleteAvatarUsecase {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
 
-    const key = user.toPrimitives().photoProfile;
+    const key = user.toPrimitives().photoProfile as string | null;
     if (!key) {
       throw new AppError('No avatar to delete', 404, 'NO_AVATAR');
     }

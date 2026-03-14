@@ -28,7 +28,7 @@ export class LoginuserUsecase {
 
     const data = existingUser.toPersistence();
 
-    const match = await this.passwordPort.compare(password, data.passwordHash);
+    const match = await this.passwordPort.compare(password, data.passwordHash as string);
 
     if (!match) {
       throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
