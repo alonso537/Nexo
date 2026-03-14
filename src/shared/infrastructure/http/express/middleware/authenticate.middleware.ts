@@ -1,4 +1,3 @@
-
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { env } from '../../../../../config/env';
@@ -10,11 +9,11 @@ export interface AuthPayload {
   role: string;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthPayload;
-    }
+// Extiende la interfaz Request de Express usando módulos ES2015
+import 'express';
+declare module 'express' {
+  interface Request {
+    user?: AuthPayload;
   }
 }
 
@@ -24,7 +23,8 @@ interface JwtAccessPayload {
   tokenVersion: number;
 }
 
-export const makeAuthenticate = (userRep: UserrepositoryDomain) =>
+export const makeAuthenticate =
+  (userRep: UserrepositoryDomain) =>
   async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     const authHeader = req.headers.authorization;
 

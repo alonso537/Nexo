@@ -1,6 +1,6 @@
-import type { ErrorRequestHandler } from "express";
-import { AppError } from "../../domain/errors/AppError";
-import { logger } from "../logger/logger";
+import type { ErrorRequestHandler } from 'express';
+import { AppError } from '../../domain/errors/AppError';
+import { logger } from '../logger/logger';
 
 export const errorMiddleware: ErrorRequestHandler = (err, req, res, _next) => {
   const isAppError = err instanceof AppError;
@@ -19,7 +19,7 @@ export const errorMiddleware: ErrorRequestHandler = (err, req, res, _next) => {
     message: isAppError || isDev ? err.message : 'Algo salió muy mal en nuestros servidores',
     requestId: req.headers['x-request-id'] || null,
     details: isAppError ? err.details : undefined,
-    stack: isDev ? err.stack : undefined, 
+    stack: isDev ? err.stack : undefined,
   };
 
   res.status(status).json(payload);

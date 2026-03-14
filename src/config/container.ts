@@ -41,7 +41,11 @@ class Container {
   private userRep = new UserRepositoryImpl();
 
   //usecases auth
-  private registerUserUC = new RegisterUserUsecase(this.userRep, this.passwordService, this.mailService);
+  private registerUserUC = new RegisterUserUsecase(
+    this.userRep,
+    this.passwordService,
+    this.mailService,
+  );
   private loginUserUC = new LoginuserUsecase(this.userRep, this.tokenService, this.passwordService);
   private getMeUserUC = new GetmeUserUsecase(this.userRep);
   private refreshTokenUC = new RefreshTokenUsecase(this.userRep, this.tokenService);
@@ -94,18 +98,18 @@ class Container {
     this.getAllUsersUC,
     this.deleteAvatarUC,
 
-    this.userPresenter
-  )
+    this.userPresenter,
+  );
 
-  get AuthController() {
+  get AuthController(): AuthController {
     return this.authController;
   }
 
-  get UserController() {
+  get UserController(): UserController {
     return this.userController;
   }
 
-  get authenticate() {
+  get authenticate(): ReturnType<typeof makeAuthenticate> {
     return makeAuthenticate(this.userRep);
   }
 }

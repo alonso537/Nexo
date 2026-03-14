@@ -296,9 +296,7 @@ describe('User E2E Tests', () => {
     });
 
     it('should return 401 without a token', async () => {
-      const res = await request(app)
-        .patch('/api/user/some-id/role')
-        .send({ role: 'SUPPORT' });
+      const res = await request(app).patch('/api/user/some-id/role').send({ role: 'SUPPORT' });
       expect(res.status).toBe(401);
     });
   });
@@ -306,7 +304,10 @@ describe('User E2E Tests', () => {
   describe('PATCH /api/user/:id/role/admin', () => {
     it('should allow a super admin to assign any role', async () => {
       const user = await registerAndLogin('targetadmin', 'targetadmin@email.com');
-      const superAdmin = await registerSuperAdminAndLogin('superadminrole', 'superadminrole@email.com');
+      const superAdmin = await registerSuperAdminAndLogin(
+        'superadminrole',
+        'superadminrole@email.com',
+      );
 
       const res = await request(app)
         .patch(`/api/user/${user.userId}/role/admin`)
@@ -385,7 +386,10 @@ describe('User E2E Tests', () => {
   describe('PATCH /api/user/:id/status/block', () => {
     it('should allow a super admin to block a user', async () => {
       const user = await registerAndLogin('blockuser', 'block@email.com');
-      const superAdmin = await registerSuperAdminAndLogin('superadminblock', 'superadminblock@email.com');
+      const superAdmin = await registerSuperAdminAndLogin(
+        'superadminblock',
+        'superadminblock@email.com',
+      );
 
       const res = await request(app)
         .patch(`/api/user/${user.userId}/status/block`)

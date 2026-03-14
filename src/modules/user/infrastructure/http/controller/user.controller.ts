@@ -88,7 +88,7 @@ export class UserController {
       message: 'Role updated successfully',
       data: this.userPresenter.one(user),
     });
-  })
+  });
 
   deactivate = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
@@ -98,8 +98,7 @@ export class UserController {
       message: 'User deactivated successfully',
       data: this.userPresenter.one(user),
     });
-
-  })
+  });
 
   suspend = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
@@ -109,29 +108,32 @@ export class UserController {
       message: 'User suspended successfully',
       data: this.userPresenter.one(user),
     });
-  })
+  });
 
   block = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
-    const {reason} = req.body;
+    const { reason } = req.body;
 
     const user = await this.blockUC.execute({ id: id as string, reason }, req.user!.role as Role);
     res.status(200).json({
       message: 'User blocked successfully',
       data: this.userPresenter.one(user),
     });
-  })
+  });
 
   updatePassword = asyncHandler(async (req: Request, res: Response) => {
     const { currentPassword, newPassword } = req.body;
 
-    const user = await this.updatePasswordUC.execute(req.user!.sub, { currentPassword, newPassword });
+    const user = await this.updatePasswordUC.execute(req.user!.sub, {
+      currentPassword,
+      newPassword,
+    });
 
     res.status(200).json({
       message: 'Password updated successfully',
       data: this.userPresenter.one(user),
     });
-  })
+  });
 
   updatePhotoProfile = asyncHandler(async (req: Request, res: Response) => {
     if (!req.file) throw new AppError('No file uploaded', 400, 'NO_FILE');
@@ -149,7 +151,7 @@ export class UserController {
       message: 'Photo profile updated successfully',
       data: this.userPresenter.one(user),
     });
-  })
+  });
 
   getUserBySlug = asyncHandler(async (req: Request, res: Response) => {
     const { username } = req.params;
@@ -160,7 +162,7 @@ export class UserController {
       message: 'User retrieved successfully',
       data: this.userPresenter.one(user),
     });
-  })
+  });
 
   getAllUsers = asyncHandler(async (req: Request, res: Response) => {
     const filters = FilterUsersSchema.parse({ query: req.query }).query;
@@ -178,7 +180,7 @@ export class UserController {
         hasPreviousPage: result.hasPreviousPage,
       },
     });
-  })
+  });
 
   deleteAvatar = asyncHandler(async (req: Request, res: Response) => {
     const user = await this.deleteAvatarUC.execute(req.user!.sub);
@@ -187,5 +189,5 @@ export class UserController {
       message: 'Avatar deleted successfully',
       data: this.userPresenter.one(user),
     });
-  })
+  });
 }

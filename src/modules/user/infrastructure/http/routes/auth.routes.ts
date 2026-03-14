@@ -20,5 +20,9 @@ authRoutes.post('/logout', authenticate, auth.logout);
 authRoutes.post('/forgot-password', validate(ForgotPasswordSchema), auth.forgotPassword);
 authRoutes.post('/reset-password', validate(ResetPasswordSchema), auth.resetPassword);
 authRoutes.get('/verify-email', validate(verifyEmailSchema), auth.verifyEmail);
-authRoutes.post('/resend-verification', validate(ResendVerificationSchema), auth.resendverification);
+authRoutes.post(
+  '/resend-verification',
+  validate(ResendVerificationSchema),
+  auth.resendverification,
+);
 authRoutes.get('/me', authenticate, auth.getMe);

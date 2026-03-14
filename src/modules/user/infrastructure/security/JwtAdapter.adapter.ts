@@ -4,7 +4,11 @@ import { AppError } from '../../../../shared/domain/errors/AppError';
 import { TokenPayload, TokenPort } from '../../domain/ports/token.port';
 
 export class JwtAdapter implements TokenPort {
-  sign(payload: object, expiresIn?: string | number, tokenType: 'access' | 'refresh' = 'access'): Promise<string> {
+  sign(
+    payload: object,
+    expiresIn?: string | number,
+    tokenType: 'access' | 'refresh' = 'access',
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       const secret = tokenType === 'refresh' ? env.JWT_REFRESH_SECRET : env.JWT_ACCESS_SECRET;
       jwt.sign(
@@ -12,14 +16,18 @@ export class JwtAdapter implements TokenPort {
         secret,
         { expiresIn: expiresIn ?? env.JWT_ACCESS_TTL } as SignOptions,
         (err, token) => {
-          if (err || !token) return reject(new AppError('Failed to sign token', 500, 'TOKEN_SIGN_ERROR'));
+          if (err || !token)
+            return reject(new AppError('Failed to sign token', 500, 'TOKEN_SIGN_ERROR'));
           resolve(token);
         },
       );
     });
   }
 
-  verify<T extends TokenPayload = TokenPayload>(token: string, tokenType: 'access' | 'refresh' = 'access'): Promise<T> {
+  verify<T extends TokenPayload = TokenPayload>(
+    token: string,
+    tokenType: 'access' | 'refresh' = 'access',
+  ): Promise<T> {
     return new Promise((resolve, reject) => {
       const secret = tokenType === 'refresh' ? env.JWT_REFRESH_SECRET : env.JWT_ACCESS_SECRET;
       jwt.verify(token, secret, (err, decoded) => {

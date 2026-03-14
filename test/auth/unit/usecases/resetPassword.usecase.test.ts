@@ -20,15 +20,13 @@ const mockRepository: UserrepositoryDomain = {
 const mockPasswordPort: PasswordPort = {
   hash: vi.fn(),
   compare: vi.fn(),
-}
-
+};
 
 function createActiveUser(): UserEntity {
   const user = UserEntity.create('username', 'email@gmail.com', '12245678945525');
-  user.activate(user.toPersistence().verificationToken!.value);
+  user.activate((user.toPersistence().verificationToken as { value: string }).value);
   return user;
 }
-
 
 describe('ResetPasswordUseCase', () => {
   let usecase: ResetPasswordUsecase;
@@ -36,12 +34,12 @@ describe('ResetPasswordUseCase', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     usecase = new ResetPasswordUsecase(mockRepository, mockPasswordPort);
-  })
+  });
   describe('execute()', () => {
     it('should update the password when the reset code is valid', async () => {
       const user = createActiveUser();
       user.generatePasswordResetToken();
-      const resetToken = user.toPersistence().passwordResetToken!.value;
+      const resetToken = (user.toPersistence().passwordResetToken as { value: string }).value;
 
       vi.mocked(mockRepository.findByPasswordResetToken).mockResolvedValue(user);
       vi.mocked(mockPasswordPort.hash).mockResolvedValue('hashed-new-password');
@@ -58,7 +56,7 @@ describe('ResetPasswordUseCase', () => {
     it('should hash the new password before saving', async () => {
       const user = createActiveUser();
       user.generatePasswordResetToken();
-      const resetToken = user.toPersistence().passwordResetToken!.value;
+      const resetToken = (user.toPersistence().passwordResetToken as { value: string }).value;
 
       vi.mocked(mockRepository.findByPasswordResetToken).mockResolvedValue(user);
       vi.mocked(mockPasswordPort.hash).mockResolvedValue('hashed-new-password');
@@ -73,7 +71,7 @@ describe('ResetPasswordUseCase', () => {
     it('should increment tokenVersion after password reset', async () => {
       const user = createActiveUser();
       user.generatePasswordResetToken();
-      const resetToken = user.toPersistence().passwordResetToken!.value;
+      const resetToken = (user.toPersistence().passwordResetToken as { value: string }).value;
       const initialTokenVersion = user.toPersistence().tokenVersion;
 
       vi.mocked(mockRepository.findByPasswordResetToken).mockResolvedValue(user);
@@ -84,32 +82,38 @@ describe('ResetPasswordUseCase', () => {
 
       const savedUser = vi.mocked(mockRepository.save).mock.calls[0][0];
 
-      expect(savedUser.toPersistence().tokenVersion).toBe(initialTokenVersion + 1);
+      expect(savedUser.toPersistence().tokenVersion as number).toBe((initialTokenVersion as number) + 1);
     });
     it('should throw when reset code is invalid', async () => {
       vi.mocked(mockRepository.findByPasswordResetToken).mockResolvedValue(null);
 
-      await expect(usecase.execute({ token: 'invalid-token', newPassword: 'newpassword123' })).rejects.toThrow(AppError);
+      await expect(
+        usecase.execute({ token: 'invalid-token', newPassword: 'newpassword123' }),
+      ).rejects.toThrow(AppError);
     });
     it('should throw when reset code is expired', async () => {
       vi.useFakeTimers();
       const user = createActiveUser();
       user.generatePasswordResetToken();
-      const resetToken = user.toPersistence().passwordResetToken!.value;
+      const resetToken = (user.toPersistence().passwordResetToken as { value: string }).value;
 
       vi.mocked(mockRepository.findByPasswordResetToken).mockResolvedValue(user);
 
       // Simulate token expiration (token valid for 60 min, advance 61 min)
       vi.advanceTimersByTime(61 * 60 * 1000);
 
-      await expect(usecase.execute({ token: resetToken, newPassword: 'newpassword123' })).rejects.toThrow(AppError);
+      await expect(
+        usecase.execute({ token: resetToken, newPassword: 'newpassword123' }),
+      ).rejects.toThrow(AppError);
 
       vi.useRealTimers();
     });
     it('should throw when user is not found', async () => {
       vi.mocked(mockRepository.findByPasswordResetToken).mockResolvedValue(null);
 
-      await expect(usecase.execute({ token: 'non-existent-token', newPassword: 'newpassword123' })).rejects.toThrow(AppError);
+      await expect(
+        usecase.execute({ token: 'non-existent-token', newPassword: 'newpassword123' }),
+      ).rejects.toThrow(AppError);
     });
   });
 });

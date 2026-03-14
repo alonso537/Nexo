@@ -37,12 +37,10 @@ const getMe = (accessToken: string) =>
   request(app).get('/api/auth/me').set('Authorization', `Bearer ${accessToken}`);
 const logout = (accessToken: string) =>
   request(app).post('/api/auth/logout').set('Authorization', `Bearer ${accessToken}`);
-const verifyEmail = (token: string) =>
-  request(app).get('/api/auth/verify-email').query({ token });
+const verifyEmail = (token: string) => request(app).get('/api/auth/verify-email').query({ token });
 const resendVerification = (body: object) =>
   request(app).post('/api/auth/resend-verification').send(body);
-const forgotPassword = (body: object) =>
-  request(app).post('/api/auth/forgot-password').send(body);
+const forgotPassword = (body: object) => request(app).post('/api/auth/forgot-password').send(body);
 const resetPassword = (token: string, body: object) =>
   request(app).post('/api/auth/reset-password').query({ token }).send(body);
 
@@ -66,30 +64,54 @@ describe('Auth E2E Tests', () => {
 
     it('should not register a user with an already used email', async () => {
       await register({ username: 'otheruser', email: VALID_EMAIL, password: VALID_PASSWORD });
-      const res = await register({ username: 'anotheruser', email: VALID_EMAIL, password: VALID_PASSWORD });
+      const res = await register({
+        username: 'anotheruser',
+        email: VALID_EMAIL,
+        password: VALID_PASSWORD,
+      });
       expect(res.status).toBe(400);
       expect(res.body.message).toBe('Email already in use');
     });
 
     it('should not register a user with an already used username', async () => {
-      await register({ username: VALID_USERNAME, email: 'otheremail@email.com', password: VALID_PASSWORD });
-      const res = await register({ username: VALID_USERNAME, email: 'nekfhrb@gmail.com', password: VALID_PASSWORD });
+      await register({
+        username: VALID_USERNAME,
+        email: 'otheremail@email.com',
+        password: VALID_PASSWORD,
+      });
+      const res = await register({
+        username: VALID_USERNAME,
+        email: 'nekfhrb@gmail.com',
+        password: VALID_PASSWORD,
+      });
       expect(res.status).toBe(400);
       expect(res.body.message).toBe('Username already in use');
     });
 
     it('should not register a user with invalid email', async () => {
-      const res = await register({ username: 'validusername', email: 'invalid-email', password: VALID_PASSWORD });
+      const res = await register({
+        username: 'validusername',
+        email: 'invalid-email',
+        password: VALID_PASSWORD,
+      });
       expect(res.status).toBe(400);
     });
 
     it('should not register a user with weak password', async () => {
-      const res = await register({ username: 'validusername', email: 'email@email.com', password: 'weak' });
+      const res = await register({
+        username: 'validusername',
+        email: 'email@email.com',
+        password: 'weak',
+      });
       expect(res.status).toBe(400);
     });
 
     it('should not register a user with invalid username', async () => {
-      const res = await register({ username: 'invalid username', email: 'email@email.com', password: VALID_PASSWORD });
+      const res = await register({
+        username: 'invalid username',
+        email: 'email@email.com',
+        password: VALID_PASSWORD,
+      });
       expect(res.status).toBe(400);
     });
   });
@@ -223,4 +245,3 @@ describe('Auth E2E Tests', () => {
     });
   });
 });
-

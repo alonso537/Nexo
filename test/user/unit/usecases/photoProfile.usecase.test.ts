@@ -5,7 +5,7 @@ import { UserEntity } from '../../../../src/modules/user/domain/entities/user.en
 import { StoragePort, UploadedFile } from '../../../../src/shared/domain/ports/storage.port';
 import { AppError } from '../../../../src/shared/domain/errors/AppError';
 
-const mockRepository:UserrepositoryDomain = {
+const mockRepository: UserrepositoryDomain = {
   save: vi.fn(),
   delete: vi.fn(),
   findById: vi.fn(),
@@ -14,13 +14,13 @@ const mockRepository:UserrepositoryDomain = {
   findByVerificationToken: vi.fn(),
   findByPasswordResetToken: vi.fn(),
   findAll: vi.fn(),
-}
+};
 
-const mockStoragePort:StoragePort = {
+const mockStoragePort: StoragePort = {
   upload: vi.fn(),
-   delete: vi.fn(),
+  delete: vi.fn(),
   getUrl: vi.fn(),
-}
+};
 
 function createActiveUser(): UserEntity {
   const user = UserEntity.create('testuser', 'test@gmail.com', '123456789askf');
@@ -32,13 +32,12 @@ function createActiveUser(): UserEntity {
 }
 
 describe('PhotoProfileUseCase', () => {
-
   let usecase: UpdatePhotoProfileUsecase;
 
   beforeEach(() => {
     vi.clearAllMocks();
     usecase = new UpdatePhotoProfileUsecase(mockRepository, mockStoragePort);
-  })
+  });
 
   describe('execute()', () => {
     it('should upload the image to S3 and update the user photoProfile key', async () => {

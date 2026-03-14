@@ -35,7 +35,10 @@ export class LoginuserUsecase {
     }
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.tokenPort.sign({ sub: data.id, role: data.role, tokenVersion: data.tokenVersion }, env.JWT_ACCESS_TTL),
+      this.tokenPort.sign(
+        { sub: data.id, role: data.role, tokenVersion: data.tokenVersion },
+        env.JWT_ACCESS_TTL,
+      ),
       this.tokenPort.sign(
         { sub: data.id, role: data.role, type: 'refresh', tokenVersion: data.tokenVersion },
         env.JWT_REFRESH_TTL,

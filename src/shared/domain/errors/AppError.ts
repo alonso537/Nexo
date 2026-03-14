@@ -7,11 +7,11 @@ export class AppError extends Error {
     message: string,
     statusCode: number = 500,
     code: string = 'INTERNAL_SERVER_ERROR',
-    details?: unknown
+    details?: unknown,
   ) {
     super(message);
-    
-    this.name = this.constructor.name; 
+
+    this.name = this.constructor.name;
     this.statusCode = statusCode;
     this.code = code;
     this.details = details;

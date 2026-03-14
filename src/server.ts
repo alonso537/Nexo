@@ -1,4 +1,3 @@
-
 import { createApp } from './app';
 import { env } from './config/env';
 import { ConnectDb } from './modules/user/infrastructure/db/mongo';

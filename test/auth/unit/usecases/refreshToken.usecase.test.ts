@@ -17,18 +17,16 @@ const mockRepository: UserrepositoryDomain = {
   findAll: vi.fn(),
 };
 
-const mockTokenPort:TokenPort = {
+const mockTokenPort: TokenPort = {
   sign: vi.fn(),
   verify: vi.fn(),
-}
-
+};
 
 function createActiveUser(): UserEntity {
   const user = UserEntity.create('username', 'email@gmail.com', '12245678945525');
-  user.activate(user.toPersistence().verificationToken!.value);
+  user.activate((user.toPersistence().verificationToken as { value: string }).value);
   return user;
 }
-
 
 describe('RefreshTokenUseCase', () => {
   let usecase: RefreshTokenUsecase;
@@ -41,10 +39,10 @@ describe('RefreshTokenUseCase', () => {
     it('should return a new access token when refresh token is valid', async () => {
       const user = createActiveUser();
       const refreshTokenPayload = {
-        sub: user.toPersistence().id.toString(),
-        role: user.toPersistence().role,
+        sub: (user.toPersistence().id as string).toString(),
+        role: user.toPersistence().role as string,
         type: 'refresh',
-        tokenVersion: user.toPersistence().tokenVersion,
+        tokenVersion: user.toPersistence().tokenVersion as number,
       };
       vi.mocked(mockTokenPort.verify).mockResolvedValue(refreshTokenPayload);
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
@@ -54,7 +52,7 @@ describe('RefreshTokenUseCase', () => {
 
       expect(result).toEqual({ accessToken: 'new-access-token' });
       expect(mockTokenPort.verify).toHaveBeenCalledWith('valid-refresh-token', 'refresh');
-      expect(mockRepository.findById).toHaveBeenCalledWith(user.toPersistence().id.toString());
+      expect(mockRepository.findById).toHaveBeenCalledWith((user.toPersistence().id as string).toString());
     });
     it('should throw when the refresh token is invalid or expired', async () => {
       vi.mocked(mockTokenPort.verify).mockRejectedValue(new Error('Invalid token'));
@@ -65,17 +63,17 @@ describe('RefreshTokenUseCase', () => {
     it('should throw when tokenVersion does not match (invalidated session)', async () => {
       const user = createActiveUser();
       const refreshTokenPayload = {
-        sub: user.toPersistence().id.toString(),
-        role: user.toPersistence().role,
+        sub: (user.toPersistence().id as string).toString(),
+        role: user.toPersistence().role as string,
         type: 'refresh',
-        tokenVersion: user.toPersistence().tokenVersion + 1, // Simulate tokenVersion mismatch
+        tokenVersion: (user.toPersistence().tokenVersion as number) + 1, // Simulate tokenVersion mismatch
       };
       vi.mocked(mockTokenPort.verify).mockResolvedValue(refreshTokenPayload);
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
 
       await expect(usecase.execute('valid-refresh-token')).rejects.toThrow(AppError);
       expect(mockTokenPort.verify).toHaveBeenCalledWith('valid-refresh-token', 'refresh');
-      expect(mockRepository.findById).toHaveBeenCalledWith(user.toPersistence().id.toString());
+      expect(mockRepository.findById).toHaveBeenCalledWith((user.toPersistence().id as string).toString());
     });
     it('should throw when user is not found', async () => {
       const refreshTokenPayload = {
@@ -95,10 +93,10 @@ describe('RefreshTokenUseCase', () => {
       const user = createActiveUser();
       user.block('Account suspended');
       const refreshTokenPayload = {
-        sub: user.toPersistence().id.toString(),
-        role: user.toPersistence().role,
+        sub: (user.toPersistence().id as string).toString(),
+        role: user.toPersistence().role as string,
         type: 'refresh',
-        tokenVersion: user.toPersistence().tokenVersion,
+        tokenVersion: user.toPersistence().tokenVersion as number,
       };
       vi.mocked(mockTokenPort.verify).mockResolvedValue(refreshTokenPayload);
       vi.mocked(mockRepository.findById).mockResolvedValue(user);

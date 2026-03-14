@@ -73,14 +73,18 @@ describe('UpdateEmailUseCase', () => {
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(otherUser); // different user owns this email
 
-      await expect(usecase.execute(user.toPersistence().id, { newEmail: 'taken@gmail.com' })).rejects.toThrow(AppError);
+      await expect(
+        usecase.execute(user.toPersistence().id, { newEmail: 'taken@gmail.com' }),
+      ).rejects.toThrow(AppError);
     });
     it('should throw when the new email is the same as the current one', async () => {
       const user = createActiveUser();
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
 
-      await expect(usecase.execute(user.toPersistence().id, { newEmail: 'test@gmail.com' })).rejects.toThrow(AppError);
+      await expect(
+        usecase.execute(user.toPersistence().id, { newEmail: 'test@gmail.com' }),
+      ).rejects.toThrow(AppError);
     });
     it('should throw when the user is not found', async () => {
       vi.mocked(mockRepository.findById).mockResolvedValue(null);

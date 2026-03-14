@@ -33,8 +33,8 @@ export class RegisterUserUsecase {
     await this.userRep.save(user);
 
     await this.mailPort.sendVerificationEmail(
-      user.toPersistence().email,
-      user.toPersistence().verificationToken!.value,
+      user.getEmail(),
+      user.getVerificationTokenValue()!,
     );
 
     return user;

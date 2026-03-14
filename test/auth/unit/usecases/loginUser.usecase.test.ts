@@ -18,22 +18,21 @@ const mockRepository: UserrepositoryDomain = {
   findAll: vi.fn(),
 };
 
-const mockTokenPort:TokenPort = {
+const mockTokenPort: TokenPort = {
   sign: vi.fn(),
   verify: vi.fn(),
-}
+};
 
-const mockPasswordPort:PasswordPort = {
+const mockPasswordPort: PasswordPort = {
   hash: vi.fn(),
   compare: vi.fn(),
-}
+};
 
 function createActiveUser(): UserEntity {
   const user = UserEntity.create('username', 'email@gmail.com', '12245678945525');
-  user.activate(user.toPersistence().verificationToken!.value);
+  user.activate((user.toPersistence().verificationToken as { value: string }).value);
   return user;
 }
-
 
 describe('LoginUserUseCase', () => {
   let usecase: LoginuserUsecase;
@@ -49,7 +48,10 @@ describe('LoginUserUseCase', () => {
       vi.mocked(mockPasswordPort.compare).mockResolvedValue(true);
       vi.mocked(mockTokenPort.sign).mockResolvedValue('mock-token');
 
-      const result = await usecase.execute({ email: 'email@gmail.com', password: '12245678945525' });
+      const result = await usecase.execute({
+        email: 'email@gmail.com',
+        password: '12245678945525',
+      });
 
       expect(result).toEqual({ accessToken: 'mock-token', refreshToken: 'mock-token' });
       expect(mockRepository.findByEmail).toHaveBeenCalledWith('email@gmail.com');
@@ -73,14 +75,18 @@ describe('LoginUserUseCase', () => {
     it('should throw when user is not found', async () => {
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
 
-      await expect(usecase.execute({ email: 'notfound@gmail.com', password: '12245678945525' })).rejects.toThrow(AppError);
+      await expect(
+        usecase.execute({ email: 'notfound@gmail.com', password: '12245678945525' }),
+      ).rejects.toThrow(AppError);
     });
     it('should throw when password does not match', async () => {
       const user = createActiveUser();
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(user);
       vi.mocked(mockPasswordPort.compare).mockResolvedValue(false);
 
-      await expect(usecase.execute({ email: 'email@gmail.com', password: 'wrongpassword' })).rejects.toThrow(AppError);
+      await expect(
+        usecase.execute({ email: 'email@gmail.com', password: 'wrongpassword' }),
+      ).rejects.toThrow(AppError);
     });
     it('should throw when user is not ACTIVE (PENDING, SUSPENDED, BLOCKED)', async () => {
       // BLOCKED user
@@ -88,7 +94,9 @@ describe('LoginUserUseCase', () => {
       blockedUser.block('Violation');
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(blockedUser);
 
-      await expect(usecase.execute({ email: 'email@gmail.com', password: '12245678945525' })).rejects.toThrow(AppError);
+      await expect(
+        usecase.execute({ email: 'email@gmail.com', password: '12245678945525' }),
+      ).rejects.toThrow(AppError);
     });
   });
 });

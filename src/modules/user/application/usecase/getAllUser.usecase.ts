@@ -5,9 +5,7 @@ import { FilterUsersDto } from '../dto/filterUsers.dto';
 export class GetAllUsersUsecase {
   constructor(private readonly userRep: UserrepositoryDomain) {}
 
-  async execute(
-    filters: FilterUsersDto,
-  ): Promise<{
+  async execute(filters: FilterUsersDto): Promise<{
     data: UserEntity[];
     total: number;
     page: number;

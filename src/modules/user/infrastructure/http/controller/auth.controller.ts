@@ -11,7 +11,7 @@ import { ResendVerificationUsecase } from '../../../application/usecase/resendTo
 import { ResetPasswordUsecase } from '../../../application/usecase/resetPassword.usecase';
 import { VerifyEmailUsecase } from '../../../application/usecase/verifyEmail.usecase';
 import { UserPresenter } from '../../presenter/user.presenter';
-import { Request, Response } from 'express';
+import { Request, Response, RequestHandler } from 'express';
 
 export class AuthController {
   constructor(
@@ -27,7 +27,13 @@ export class AuthController {
     private readonly userPresenter: UserPresenter,
   ) {}
 
-  private getCookieBaseOptions() {
+  private getCookieBaseOptions(): {
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: 'none' | 'lax';
+    domain: string | undefined;
+    path: string;
+  } {
     const raw = (env.COOKIE_DOMAIN ?? '').trim();
 
     const domain = raw && /^[a-z0-9.-]+$/i.test(raw) && raw !== 'localhost' ? raw : undefined;
@@ -43,7 +49,7 @@ export class AuthController {
     };
   }
 
-  private setRefreshTokenCookie(res: Response, token: string) {
+  private setRefreshTokenCookie(res: Response, token: string): void {
     const opts = {
       ...this.getCookieBaseOptions(),
       maxAge: getJwtRefreshTtlMs(),
@@ -51,7 +57,7 @@ export class AuthController {
     res.cookie('refreshToken', token, opts);
   }
 
-  register = asyncHandler(async (req: Request, res: Response) => {
+  register: RequestHandler = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { email, username, password } = req.body;
     const user = await this.registerUserUC.execute({ email, username, password });
     res.status(201).json({
@@ -60,7 +66,7 @@ export class AuthController {
     });
   });
 
-  login = asyncHandler(async (req: Request, res: Response) => {
+  login: RequestHandler = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
     const tokens = await this.loginUserUC.execute({ email, password });
     this.setRefreshTokenCookie(res, tokens.refreshToken);
@@ -71,8 +77,11 @@ export class AuthController {
     });
   });
 
-  getMe = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user?.sub!;
+  getMe: RequestHandler = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user?.sub;
+    if (!userId) {
+      throw new AppError('User not authenticated', 401, 'UNAUTHORIZED');
+    }
 
     const user = await this.getMeUserUC.execute(userId);
     res.status(200).json({
@@ -81,20 +90,25 @@ export class AuthController {
     });
   });
 
-  refreshToken = asyncHandler(async (req: Request, res: Response) => {
-    const token = req.cookies?.refreshToken as string | undefined;
-    if (!token) {
-      throw new AppError('Refresh token missing', 401, 'UNAUTHORIZED');
-    }
-    const { accessToken } = await this.refreshTokenUC.execute(token);
-    res.status(200).json({
-      accessToken,
-      expiresIn: getJwtAccessTtlMs(),
-    });
-  });
+  refreshToken: RequestHandler = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const token = req.cookies?.refreshToken as string | undefined;
+      if (!token) {
+        throw new AppError('Refresh token missing', 401, 'UNAUTHORIZED');
+      }
+      const { accessToken } = await this.refreshTokenUC.execute(token);
+      res.status(200).json({
+        accessToken,
+        expiresIn: getJwtAccessTtlMs(),
+      });
+    },
+  );
 
-  logout = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user?.sub!;
+  logout: RequestHandler = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user?.sub;
+    if (!userId) {
+      throw new AppError('User not authenticated', 401, 'UNAUTHORIZED');
+    }
     await this.logoutUC.execute(userId);
     res.clearCookie('refreshToken', this.getCookieBaseOptions());
     res.status(200).json({
@@ -102,7 +116,7 @@ export class AuthController {
     });
   });
 
-  verifyEmail = asyncHandler(async (req: Request, res: Response) => {
+  verifyEmail: RequestHandler = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { token } = req.query;
 
     await this.verifyEmailUC.execute({ token: token as string });
@@ -111,30 +125,36 @@ export class AuthController {
     });
   });
 
-  resendverification = asyncHandler(async (req: Request, res: Response) => {
-    const { email } = req.body;
+  resendverification: RequestHandler = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { email } = req.body;
 
-    await this.resendTokenUC.execute({ email });
-    res.status(200).json({
-      message: 'If an account with that email exists, a new verification link has been sent.',
-    });
-  });
+      await this.resendTokenUC.execute({ email });
+      res.status(200).json({
+        message: 'If an account with that email exists, a new verification link has been sent.',
+      });
+    },
+  );
 
-  forgotPassword = asyncHandler(async (req: Request, res: Response) => {
-    const { email } = req.body;
+  forgotPassword: RequestHandler = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { email } = req.body;
 
-    await this.forgotPasswordUC.execute({ email });
-    res.status(200).json({
-      message: 'If an account with that email exists, a password reset link has been sent.',
-    });
-  });
+      await this.forgotPasswordUC.execute({ email });
+      res.status(200).json({
+        message: 'If an account with that email exists, a password reset link has been sent.',
+      });
+    },
+  );
 
-  resetPassword = asyncHandler(async (req: Request, res: Response) => {
-    const { newPassword } = req.body;
-    const { token } = req.query;
-    await this.resetPasswordUC.execute({ token: token as string, newPassword });
-    res.status(200).json({
-      message: 'Password reset successful',
-    });
-  });
+  resetPassword: RequestHandler = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { newPassword } = req.body;
+      const { token } = req.query;
+      await this.resetPasswordUC.execute({ token: token as string, newPassword });
+      res.status(200).json({
+        message: 'Password reset successful',
+      });
+    },
+  );
 }

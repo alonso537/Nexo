@@ -5,8 +5,7 @@ import { UserEntity } from '../../../../src/modules/user/domain/entities/user.en
 import { StoragePort } from '../../../../src/shared/domain/ports/storage.port';
 import { AppError } from '../../../../src/shared/domain/errors/AppError';
 
-
-const mockRepository:UserrepositoryDomain = {
+const mockRepository: UserrepositoryDomain = {
   save: vi.fn(),
   delete: vi.fn(),
   findById: vi.fn(),
@@ -15,13 +14,13 @@ const mockRepository:UserrepositoryDomain = {
   findByVerificationToken: vi.fn(),
   findByPasswordResetToken: vi.fn(),
   findAll: vi.fn(),
-}
+};
 
-const mockStoragePort:StoragePort ={
+const mockStoragePort: StoragePort = {
   upload: vi.fn(),
   delete: vi.fn(),
   getUrl: vi.fn(),
-}
+};
 
 function createActiveUser(): UserEntity {
   const user = UserEntity.create('testuser', 'test@gmail.com', '123456789askf');
@@ -29,8 +28,7 @@ function createActiveUser(): UserEntity {
   user.activate(code);
   // user.changeRole('ADMIN')
 
-  user.updatePhotoProfile('avatar/user.jpg')
-
+  user.updatePhotoProfile('avatar/user.jpg');
 
   return user;
 }
@@ -40,14 +38,14 @@ describe('DeleteAvatarUsecase', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    usecase = new DeleteAvatarUsecase(mockRepository,  mockStoragePort);
+    usecase = new DeleteAvatarUsecase(mockRepository, mockStoragePort);
   });
   describe('execute()', () => {
     it('should remove the S3 object and clear photoProfile on the user', async () => {
-      const user = createActiveUser()
+      const user = createActiveUser();
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
 
-      const result = await usecase.execute( user.toPersistence().id);
+      const result = await usecase.execute(user.toPersistence().id);
 
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
       expect(mockRepository.findById).toHaveBeenCalledWith(user.toPersistence().id);
@@ -57,7 +55,7 @@ describe('DeleteAvatarUsecase', () => {
       expect(savedUser.toPersistence().photoProfile).toBeNull();
     });
     it('should throw when the user has no avatar', async () => {
-      const user = createActiveUser()
+      const user = createActiveUser();
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
       user.removePhotoProfile();
 

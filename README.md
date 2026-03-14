@@ -1,4 +1,5 @@
 src/
+
 # Nexo API
 
 REST API built with Node.js, Express, and TypeScript, following **Clean Architecture** and **Domain-Driven Design (DDD)** principles. All user-facing text and documentation are in English for portfolio/demo purposes.
@@ -63,22 +64,22 @@ cp .env.example .env
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start in development mode with hot reload |
-| `npm run build` | Compile TypeScript to `dist/` |
-| `npm start` | Run the production build |
-| `npm test` | Run all tests |
-| `npm run test:watch` | Run tests in watch mode |
-| `npm run lint` | Lint with ESLint |
-| `npm run format` | Format code with Prettier |
+| Command              | Description                               |
+| -------------------- | ----------------------------------------- |
+| `npm run dev`        | Start in development mode with hot reload |
+| `npm run build`      | Compile TypeScript to `dist/`             |
+| `npm start`          | Run the production build                  |
+| `npm test`           | Run all tests                             |
+| `npm run test:watch` | Run tests in watch mode                   |
+| `npm run lint`       | Lint with ESLint                          |
+| `npm run format`     | Format code with Prettier                 |
 
 ---
-
 
 ## Docker
 
 To run the app in a container locally:
+
 ```bash
 docker compose up --build
 ```
@@ -93,9 +94,9 @@ This project includes a GitHub Actions workflow that automatically builds and pu
 
 - The workflow is defined in `.github/workflows/docker-ghcr.yml`.
 - On every push to `main`, GitHub Actions will:
-    1. Build the Docker image using your `Dockerfile`.
-    2. Authenticate to GHCR using the repository's GitHub token.
-    3. Push the image to `ghcr.io/<your-username>/<your-repo>:latest`.
+  1. Build the Docker image using your `Dockerfile`.
+  2. Authenticate to GHCR using the repository's GitHub token.
+  3. Push the image to `ghcr.io/<your-username>/<your-repo>:latest`.
 
 **Requirements:**
 
@@ -108,7 +109,7 @@ This project includes a GitHub Actions workflow that automatically builds and pu
 1. Push your code to the `main` branch on GitHub.
 2. The workflow will run automatically. You can check progress in the "Actions" tab of your repository.
 3. Your Docker image will be available at:
-     `ghcr.io/<your-username>/<your-repo>:latest`
+   `ghcr.io/<your-username>/<your-repo>:latest`
 
 For more information, see the [GitHub Container Registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
 
@@ -118,31 +119,31 @@ For more information, see the [GitHub Container Registry documentation](https://
 
 See [.env.example](.env.example) for the full list of required variables.
 
-| Variable | Description | Default |
-|---|---|---|
-| `NODE_ENV` | Environment | `development` |
-| `PORT` | Server port | `3000` |
-| `MONGO_URI` | MongoDB connection URI | — |
-| `SECRET` | General secret (cookie parser) | — |
-| `JWT_ACCESS_SECRET` | Secret for signing access tokens | — |
-| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens | — |
-| `JWT_ACCESS_TTL` | Access token TTL | `15m` |
-| `JWT_REFRESH_TTL` | Refresh token TTL | `7d` |
-| `COOKIE_SECURE` | Cookies only HTTPS | `false` |
-| `COOKIE_DOMAIN` | Cookie domain | — |
-| `CORS_ORIGINS` | Allowed origins (comma-separated) | — |
-| `SMTP_HOST` | SMTP server host | — |
-| `SMTP_PORT` | SMTP port | `587` |
-| `SMTP_USER` | SMTP user | — |
-| `SMTP_PASS` | SMTP password | — |
-| `SMTP_FROM` | Sender address | `Nexo <no-reply@nexo.app>` |
-| `FRONTEND_URL` | Frontend base URL (for email links) | `http://localhost:3000` |
-| `STORAGE_ENDPOINT` | S3-compatible endpoint (required for R2, omit for AWS S3) | — |
-| `STORAGE_REGION` | Bucket region | `auto` |
-| `STORAGE_ACCESS_KEY` | Access Key ID | — |
-| `STORAGE_SECRET_KEY` | Secret Access Key | — |
-| `STORAGE_BUCKET` | Bucket name | — |
-| `STORAGE_PUBLIC_URL` | Public base URL for bucket | — |
+| Variable             | Description                                               | Default                    |
+| -------------------- | --------------------------------------------------------- | -------------------------- |
+| `NODE_ENV`           | Environment                                               | `development`              |
+| `PORT`               | Server port                                               | `3000`                     |
+| `MONGO_URI`          | MongoDB connection URI                                    | —                          |
+| `SECRET`             | General secret (cookie parser)                            | —                          |
+| `JWT_ACCESS_SECRET`  | Secret for signing access tokens                          | —                          |
+| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens                         | —                          |
+| `JWT_ACCESS_TTL`     | Access token TTL                                          | `15m`                      |
+| `JWT_REFRESH_TTL`    | Refresh token TTL                                         | `7d`                       |
+| `COOKIE_SECURE`      | Cookies only HTTPS                                        | `false`                    |
+| `COOKIE_DOMAIN`      | Cookie domain                                             | —                          |
+| `CORS_ORIGINS`       | Allowed origins (comma-separated)                         | —                          |
+| `SMTP_HOST`          | SMTP server host                                          | —                          |
+| `SMTP_PORT`          | SMTP port                                                 | `587`                      |
+| `SMTP_USER`          | SMTP user                                                 | —                          |
+| `SMTP_PASS`          | SMTP password                                             | —                          |
+| `SMTP_FROM`          | Sender address                                            | `Nexo <no-reply@nexo.app>` |
+| `FRONTEND_URL`       | Frontend base URL (for email links)                       | `http://localhost:3000`    |
+| `STORAGE_ENDPOINT`   | S3-compatible endpoint (required for R2, omit for AWS S3) | —                          |
+| `STORAGE_REGION`     | Bucket region                                             | `auto`                     |
+| `STORAGE_ACCESS_KEY` | Access Key ID                                             | —                          |
+| `STORAGE_SECRET_KEY` | Secret Access Key                                         | —                          |
+| `STORAGE_BUCKET`     | Bucket name                                               | —                          |
+| `STORAGE_PUBLIC_URL` | Public base URL for bucket                                | —                          |
 
 ---
 
@@ -152,50 +153,50 @@ Base URL: `/api`
 
 ### Auth — `/api/auth`
 
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `POST` | `/register` | — | Register a new user |
-| `POST` | `/login` | — | Login, returns access token and refresh cookie |
-| `GET` | `/me` | ✅ Bearer | Returns the authenticated user |
-| `POST` | `/refresh-token` | Cookie | Issues a new access token |
-| `POST` | `/logout` | ✅ Bearer | Invalidates the session and clears the cookie |
-| `GET` | `/verify-email` | — | Verifies email with the token sent by email (`?token=`) |
-| `POST` | `/resend-verification` | — | Resends the verification email |
-| `POST` | `/forgot-password` | — | Requests password reset link |
-| `POST` | `/reset-password` | — | Resets password with the token sent by email (`?token=`) |
+| Method | Path                   | Auth      | Description                                              |
+| ------ | ---------------------- | --------- | -------------------------------------------------------- |
+| `POST` | `/register`            | —         | Register a new user                                      |
+| `POST` | `/login`               | —         | Login, returns access token and refresh cookie           |
+| `GET`  | `/me`                  | ✅ Bearer | Returns the authenticated user                           |
+| `POST` | `/refresh-token`       | Cookie    | Issues a new access token                                |
+| `POST` | `/logout`              | ✅ Bearer | Invalidates the session and clears the cookie            |
+| `GET`  | `/verify-email`        | —         | Verifies email with the token sent by email (`?token=`)  |
+| `POST` | `/resend-verification` | —         | Resends the verification email                           |
+| `POST` | `/forgot-password`     | —         | Requests password reset link                             |
+| `POST` | `/reset-password`      | —         | Resets password with the token sent by email (`?token=`) |
 
 ### User — `/api/user`
 
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| `GET` | `/` | ✅ ADMIN | List all users with pagination and filters |
-| `GET` | `/:username` | ✅ Bearer | Get a user by username |
-| `PATCH` | `/name` | ✅ Bearer | Update user's name |
-| `PATCH` | `/last-name` | ✅ Bearer | Update user's last name |
-| `PATCH` | `/username` | ✅ Bearer | Update username |
-| `PATCH` | `/email` | ✅ Bearer | Update email and send verification |
-| `PATCH` | `/password` | ✅ Bearer | Change password (requires current password) |
-| `PATCH` | `/avatar` | ✅ Bearer | Upload or replace profile picture (`multipart/form-data`, field `avatar`) |
-| `DELETE` | `/avatar` | ✅ Bearer | Delete profile picture |
-| `PATCH` | `/:id/role` | ✅ ADMIN | Change user role to `USER` or `SUPPORT` |
-| `PATCH` | `/:id/role/admin` | ✅ SUPER_ADMIN | Change user role to `ADMIN`, `USER`, or `SUPPORT` |
-| `PATCH` | `/:id/status/deactivate` | ✅ ADMIN | Deactivate user account |
-| `PATCH` | `/:id/status/suspend` | ✅ ADMIN | Suspend user account |
-| `PATCH` | `/:id/status/block` | ✅ SUPER_ADMIN | Block user account (requires reason) |
+| Method   | Path                     | Auth           | Description                                                               |
+| -------- | ------------------------ | -------------- | ------------------------------------------------------------------------- |
+| `GET`    | `/`                      | ✅ ADMIN       | List all users with pagination and filters                                |
+| `GET`    | `/:username`             | ✅ Bearer      | Get a user by username                                                    |
+| `PATCH`  | `/name`                  | ✅ Bearer      | Update user's name                                                        |
+| `PATCH`  | `/last-name`             | ✅ Bearer      | Update user's last name                                                   |
+| `PATCH`  | `/username`              | ✅ Bearer      | Update username                                                           |
+| `PATCH`  | `/email`                 | ✅ Bearer      | Update email and send verification                                        |
+| `PATCH`  | `/password`              | ✅ Bearer      | Change password (requires current password)                               |
+| `PATCH`  | `/avatar`                | ✅ Bearer      | Upload or replace profile picture (`multipart/form-data`, field `avatar`) |
+| `DELETE` | `/avatar`                | ✅ Bearer      | Delete profile picture                                                    |
+| `PATCH`  | `/:id/role`              | ✅ ADMIN       | Change user role to `USER` or `SUPPORT`                                   |
+| `PATCH`  | `/:id/role/admin`        | ✅ SUPER_ADMIN | Change user role to `ADMIN`, `USER`, or `SUPPORT`                         |
+| `PATCH`  | `/:id/status/deactivate` | ✅ ADMIN       | Deactivate user account                                                   |
+| `PATCH`  | `/:id/status/suspend`    | ✅ ADMIN       | Suspend user account                                                      |
+| `PATCH`  | `/:id/status/block`      | ✅ SUPER_ADMIN | Block user account (requires reason)                                      |
 
 #### Filtering parameters for `GET /api/user/`
 
-| Parameter | Type | Description |
-|---|---|---|
-| `page` | `number` | Page (default: `1`) |
-| `limit` | `number` | Results per page (default: `10`) |
-| `username` | `string` | Filter by username (partial match) |
-| `email` | `string` | Filter by email (partial match) |
-| `name` | `string` | Filter by name (partial match) |
-| `lastName` | `string` | Filter by last name (partial match) |
-| `role` | `string` | Filter by exact role |
-| `status` | `string` | Filter by exact status |
-| `includeDeleted` | `boolean` | Include soft-deleted users |
+| Parameter        | Type      | Description                         |
+| ---------------- | --------- | ----------------------------------- |
+| `page`           | `number`  | Page (default: `1`)                 |
+| `limit`          | `number`  | Results per page (default: `10`)    |
+| `username`       | `string`  | Filter by username (partial match)  |
+| `email`          | `string`  | Filter by email (partial match)     |
+| `name`           | `string`  | Filter by name (partial match)      |
+| `lastName`       | `string`  | Filter by last name (partial match) |
+| `role`           | `string`  | Filter by exact role                |
+| `status`         | `string`  | Filter by exact status              |
+| `includeDeleted` | `boolean` | Include soft-deleted users          |
 
 ---
 
@@ -222,4 +223,3 @@ Dependency rules always flow inward: `Infrastructure → Application → Domain`
 - **ReDoS** — search fields with regex escape special characters before passing to MongoDB
 - **Soft delete** — deleted users are not exposed in queries by default
 - **Soft delete** — los usuarios eliminados no se exponen en las consultas por defecto
-

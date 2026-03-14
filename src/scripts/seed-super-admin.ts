@@ -33,9 +33,8 @@ async function run(email: string, password: string, username: string): Promise<v
 
     const passwordHash = await passwordService.hash(password);
     const user = UserEntity.create(username, email, passwordHash);
-
-    const token = user.toPersistence().verificationToken!.value;
-    user.activate(token);
+  const token = (user.toPersistence().verificationToken as { value: string }).value;
+  user.activate(token);
     user.changeRole('SUPER_ADMIN');
 
     await userRepo.save(user);

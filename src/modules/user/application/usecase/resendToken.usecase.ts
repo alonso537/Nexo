@@ -3,8 +3,9 @@ import { UserrepositoryDomain } from '../../domain/repositories/userRepository.d
 import { ResendVerificationDTO } from '../dto/resendToken.dto';
 
 export class ResendVerificationUsecase {
-  constructor(private userRep: UserrepositoryDomain,
-    private readonly mailPort: MailerPort
+  constructor(
+    private userRep: UserrepositoryDomain,
+    private readonly mailPort: MailerPort,
   ) {}
 
   async execute({ email }: ResendVerificationDTO): Promise<void> {
@@ -14,12 +15,10 @@ export class ResendVerificationUsecase {
 
     user.regenerateVerificationToken();
 
-    
-    
     await this.userRep.save(user);
     await this.mailPort.sendVerificationEmail(
       user.toPersistence().email,
       user.toPersistence().verificationToken!.value,
-    )
+    );
   }
 }

@@ -21,10 +21,9 @@ const mockRepository: UserrepositoryDomain = {
   findAll: vi.fn(),
 };
 
-
 function createActiveUser(): UserEntity {
   const user = UserEntity.create('username', 'email@gmail.com', '12245678945525');
-  user.activate(user.toPersistence().verificationToken!.value);
+  user.activate((user.toPersistence().verificationToken as { value: string }).value);
   return user;
 }
 
@@ -42,7 +41,7 @@ describe('ForgotPasswordUseCase', () => {
       vi.mocked(mockRepository.save).mockResolvedValue();
       vi.mocked(mockEmailPort.sendPasswordResetEmail).mockResolvedValue();
 
-      await usecase.execute({email: 'email@gmail.com'})
+      await usecase.execute({ email: 'email@gmail.com' });
 
       expect(mockRepository.findByEmail).toHaveBeenCalledWith('email@gmail.com');
       expect(mockRepository.save).toHaveBeenCalled();
@@ -51,7 +50,7 @@ describe('ForgotPasswordUseCase', () => {
     it('should return silently when user is not found by email (no email leak)', async () => {
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
 
-      await expect(usecase.execute({email: 'email@gmail.com'})).resolves.toBeUndefined();
+      await expect(usecase.execute({ email: 'email@gmail.com' })).resolves.toBeUndefined();
       expect(mockRepository.save).not.toHaveBeenCalled();
       expect(mockEmailPort.sendPasswordResetEmail).not.toHaveBeenCalled();
     });
@@ -60,7 +59,7 @@ describe('ForgotPasswordUseCase', () => {
       user.block('Reason for blocking');
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(user);
 
-      await expect(() => usecase.execute({email: 'email@gmail.com'})).rejects.toThrow(AppError);
+      await expect(() => usecase.execute({ email: 'email@gmail.com' })).rejects.toThrow(AppError);
     });
   });
 });

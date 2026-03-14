@@ -15,13 +15,11 @@ const mockRepository: UserrepositoryDomain = {
   findAll: vi.fn(),
 };
 
-
 function createActiveUser(): UserEntity {
   const user = UserEntity.create('username', 'email@gmail.com', '12245678945525');
   user.activate(user.toPersistence().verificationToken!.value);
   return user;
 }
-
 
 describe('LogoutUsecase', () => {
   let usecase: LogoutUsecase;

@@ -1,7 +1,7 @@
 'use strict';
 
 const js = require('@eslint/js');
-const tsParser = require('@typescript-eslint/parser');
+// const tsParser = require('@typescript-eslint/parser');
 const tsPlugin = require('@typescript-eslint/eslint-plugin');
 const prettierConfig = require('eslint-config-prettier');
 const prettierPlugin = require('eslint-plugin-prettier');
@@ -15,9 +15,14 @@ module.exports = [
   {
     files: ['src/**/*.ts'],
     languageOptions: {
-      parser: tsParser,
+      parser: require('@typescript-eslint/parser'),
       parserOptions: {
         project: './tsconfig.json',
+      },
+      globals: {
+        process: 'readonly',
+        __dirname: 'readonly',
+        Buffer: 'readonly',
       },
     },
     plugins: {

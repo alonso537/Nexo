@@ -1,6 +1,16 @@
 const err = { $ref: '#/components/schemas/ErrorResponse' };
 const errContent = { 'application/json': { schema: err } };
-const userContent = { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' }, data: { $ref: '#/components/schemas/UserResponse' } } } } };
+const userContent = {
+  'application/json': {
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+        data: { $ref: '#/components/schemas/UserResponse' },
+      },
+    },
+  },
+};
 
 export const authPaths = {
   '/auth/register': {
@@ -16,7 +26,7 @@ export const authPaths = {
               required: ['username', 'email', 'password'],
               properties: {
                 username: { type: 'string', minLength: 3, maxLength: 30, example: 'john_doe' },
-                email:    { type: 'string', format: 'email', example: 'john@example.com' },
+                email: { type: 'string', format: 'email', example: 'john@example.com' },
                 password: { type: 'string', minLength: 6, maxLength: 128, example: 'secret123' },
               },
             },
@@ -25,7 +35,10 @@ export const authPaths = {
       },
       responses: {
         '201': { description: 'User registered successfully', content: userContent },
-        '400': { description: 'Validation error / email or username already in use', content: errContent },
+        '400': {
+          description: 'Validation error / email or username already in use',
+          content: errContent,
+        },
       },
     },
   },
@@ -42,7 +55,7 @@ export const authPaths = {
               type: 'object',
               required: ['email', 'password'],
               properties: {
-                email:    { type: 'string', format: 'email', example: 'john@example.com' },
+                email: { type: 'string', format: 'email', example: 'john@example.com' },
                 password: { type: 'string', example: 'secret123' },
               },
             },
@@ -52,7 +65,18 @@ export const authPaths = {
       responses: {
         '200': {
           description: 'Login successful — refresh token set as httpOnly cookie',
-          content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' }, accessToken: { type: 'string' }, expiresIn: { type: 'integer', example: 900000 } } } } },
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                  accessToken: { type: 'string' },
+                  expiresIn: { type: 'integer', example: 900000 },
+                },
+              },
+            },
+          },
         },
         '401': { description: 'Invalid credentials', content: errContent },
       },
@@ -66,7 +90,14 @@ export const authPaths = {
       responses: {
         '200': {
           description: 'New access token issued',
-          content: { 'application/json': { schema: { type: 'object', properties: { accessToken: { type: 'string' }, expiresIn: { type: 'integer' } } } } },
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: { accessToken: { type: 'string' }, expiresIn: { type: 'integer' } },
+              },
+            },
+          },
         },
         '401': { description: 'Missing or invalid refresh token', content: errContent },
       },
@@ -102,7 +133,13 @@ export const authPaths = {
       tags: ['Auth'],
       summary: 'Verify email address with token from email link',
       parameters: [
-        { in: 'query', name: 'token', required: true, schema: { type: 'string' }, description: 'Verification token sent by email' },
+        {
+          in: 'query',
+          name: 'token',
+          required: true,
+          schema: { type: 'string' },
+          description: 'Verification token sent by email',
+        },
       ],
       responses: {
         '200': { description: 'Email verified successfully' },
@@ -122,7 +159,9 @@ export const authPaths = {
             schema: {
               type: 'object',
               required: ['email'],
-              properties: { email: { type: 'string', format: 'email', example: 'john@example.com' } },
+              properties: {
+                email: { type: 'string', format: 'email', example: 'john@example.com' },
+              },
             },
           },
         },
@@ -144,7 +183,9 @@ export const authPaths = {
             schema: {
               type: 'object',
               required: ['email'],
-              properties: { email: { type: 'string', format: 'email', example: 'john@example.com' } },
+              properties: {
+                email: { type: 'string', format: 'email', example: 'john@example.com' },
+              },
             },
           },
         },
@@ -160,7 +201,13 @@ export const authPaths = {
       tags: ['Auth'],
       summary: 'Reset password using the token received by email',
       parameters: [
-        { in: 'query', name: 'token', required: true, schema: { type: 'string' }, description: 'Password reset token' },
+        {
+          in: 'query',
+          name: 'token',
+          required: true,
+          schema: { type: 'string' },
+          description: 'Password reset token',
+        },
       ],
       requestBody: {
         required: true,
@@ -169,7 +216,14 @@ export const authPaths = {
             schema: {
               type: 'object',
               required: ['newPassword'],
-              properties: { newPassword: { type: 'string', minLength: 6, maxLength: 128, example: 'newSecret123' } },
+              properties: {
+                newPassword: {
+                  type: 'string',
+                  minLength: 6,
+                  maxLength: 128,
+                  example: 'newSecret123',
+                },
+              },
             },
           },
         },

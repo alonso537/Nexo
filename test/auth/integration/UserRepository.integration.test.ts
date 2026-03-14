@@ -39,7 +39,7 @@ describe('UserRepository Integration Tests', () => {
       const user = await UserEntity.create(VALID_USERNAME, VALID_EMAIL, VALID_PASSWORD);
       await repository.save(user);
 
-      const found = await repository.findById(user.toPersistence().id);
+       const found = await repository.findById(user.toPersistence().id as string);
 
       expect(found).not.toBeNull();
       expect(found!.toPersistence().username).toBe(VALID_USERNAME.toLowerCase());
@@ -52,66 +52,65 @@ describe('UserRepository Integration Tests', () => {
       expect(found).toBeNull();
     });
     it('findByEmail() should find user by email', async () => {
-        const user = await UserEntity.create(VALID_USERNAME, VALID_EMAIL, VALID_PASSWORD);
-        await repository.save(user);
+      const user = await UserEntity.create(VALID_USERNAME, VALID_EMAIL, VALID_PASSWORD);
+      await repository.save(user);
 
-        const found = await repository.findByEmail(VALID_EMAIL)
+      const found = await repository.findByEmail(VALID_EMAIL);
 
-        expect(found).not.toBeNull();
-        expect(found!.toPersistence().email).toBe(VALID_EMAIL);
-        expect(found!.toPersistence().username).toBe(VALID_USERNAME.toLowerCase());
-        expect(found!.status).toBe('PENDING');
-    })
+      expect(found).not.toBeNull();
+      expect(found!.toPersistence().email).toBe(VALID_EMAIL);
+      expect(found!.toPersistence().username).toBe(VALID_USERNAME.toLowerCase());
+      expect(found!.status).toBe('PENDING');
+    });
     it('should return null if is not found by email', async () => {
-        const found = await repository.findByEmail('no-existe@email.com');
+      const found = await repository.findByEmail('no-existe@email.com');
 
-        expect(found).toBeNull();
-    })
+      expect(found).toBeNull();
+    });
     it('findByUsername() should find user by username', async () => {
-        const user = await UserEntity.create(VALID_USERNAME, VALID_EMAIL, VALID_PASSWORD);
-        await repository.save(user);
+      const user = await UserEntity.create(VALID_USERNAME, VALID_EMAIL, VALID_PASSWORD);
+      await repository.save(user);
 
-        const found = await repository.findByUsername(VALID_USERNAME.toLowerCase());
+      const found = await repository.findByUsername(VALID_USERNAME.toLowerCase());
 
-        expect(found).not.toBeNull();
-        expect(found!.toPersistence().username).toBe(VALID_USERNAME.toLowerCase());
-        expect(found!.toPersistence().email).toBe(VALID_EMAIL);
-        expect(found!.status).toBe('PENDING');
+      expect(found).not.toBeNull();
+      expect(found!.toPersistence().username).toBe(VALID_USERNAME.toLowerCase());
+      expect(found!.toPersistence().email).toBe(VALID_EMAIL);
+      expect(found!.status).toBe('PENDING');
     });
     it('should return null if is not found by username', async () => {
-        const found = await repository.findByUsername('nonexistentuser');
-        expect(found).toBeNull();
-    })
+      const found = await repository.findByUsername('nonexistentuser');
+      expect(found).toBeNull();
+    });
   });
   describe('save() + upsert', () => {
     it('should update an existing user', async () => {
-        const user = await UserEntity.create(VALID_USERNAME, VALID_EMAIL, VALID_PASSWORD);
-        await repository.save(user);
+      const user = await UserEntity.create(VALID_USERNAME, VALID_EMAIL, VALID_PASSWORD);
+      await repository.save(user);
 
-        const original = await repository.findById(user.toPersistence().id);
-        const createdAtProginal = original!.toPersistence().createdAt;
+       const original = await repository.findById(user.toPersistence().id as string);
+      const createdAtProginal = original!.toPersistence().createdAt as Date;
 
-        // Update some fields
-        user.activate(user.toPersistence().verificationToken!.value);
-        await repository.save(user);
+      // Update some fields
+       user.activate((user.toPersistence().verificationToken as { value: string }).value);
+      await repository.save(user);
 
-        const updated = await repository.findById(user.toPersistence().id);
-        const createdAtUpdated = updated!.toPersistence().createdAt;
+      const updated = await repository.findById(user.toPersistence().id as string);
+      const createdAtUpdated = updated!.toPersistence().createdAt as Date;
 
-        expect(createdAtUpdated.getTime()).toBe(createdAtProginal.getTime());
-        expect(updated!.status).toBe('ACTIVE');
-    })
-  })
+      expect(createdAtUpdated.getTime()).toBe(createdAtProginal.getTime());
+      expect(updated!.status).toBe('ACTIVE');
+    });
+  });
   describe('delete()', () => {
     it('should delete a user', async () => {
-        const user = await UserEntity.create(VALID_USERNAME, VALID_EMAIL, VALID_PASSWORD);
-        await repository.save(user);
+      const user = await UserEntity.create(VALID_USERNAME, VALID_EMAIL, VALID_PASSWORD);
+      await repository.save(user);
 
-        await repository.delete(user.toPersistence().id);
+         await repository.delete(user.toPersistence().id as string);
 
-        const found = await repository.findById(user.toPersistence().id);
-        expect(found).toBeNull();
-        
-    })
-  })
+      const found = await repository.findById(user.toPersistence().id as string);
+      expect(found).toBeNull();
+    });
+  });
 });

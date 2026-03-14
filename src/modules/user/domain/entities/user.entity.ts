@@ -11,6 +11,13 @@ export type UserStatus = 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BLOC
 export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'USER' | 'SUPPORT';
 
 export class UserEntity {
+    public getEmail(): string {
+      return this.email.value;
+    }
+
+    public getVerificationTokenValue(): string | null {
+      return this.verificationToken ? this.verificationToken.value : null;
+    }
   private constructor(
     private readonly id: UserIdVO,
     private name: PersonNameVO | null,
@@ -99,7 +106,11 @@ export class UserEntity {
   public regenerateVerificationToken(): void {
     this.ensureNotDeleted();
     if (this._status !== 'PENDING') {
-      throw new AppError('Only pending users can request a new verification token', 400, 'INVALID_USER_STATUS');
+      throw new AppError(
+        'Only pending users can request a new verification token',
+        400,
+        'INVALID_USER_STATUS',
+      );
     }
     this.verificationToken = ExpiringTokenVO.generate(15);
     this.touch();
@@ -174,7 +185,7 @@ export class UserEntity {
     this.passwordHash = newPasswordHash;
     this.tokenVersion++;
     this.touch();
-}
+  }
 
   public updatePassword(newPasswordHash: string, verificationCode: string): void {
     this.ensureNotDeleted();
@@ -273,7 +284,7 @@ export class UserEntity {
     this.touch();
   }
 
-  public toPersistence() {
+  public toPersistence(): Record<string, unknown> {
     return {
       id: this.id.value,
       name: this.name?.value ?? null,
@@ -301,7 +312,7 @@ export class UserEntity {
     };
   }
 
-  public toPrimitives() {
+  public toPrimitives(): Record<string, unknown> {
     return {
       id: this.id.value,
       name: this.name?.value ?? null,

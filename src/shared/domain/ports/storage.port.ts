@@ -6,7 +6,7 @@ export interface UploadedFile {
 }
 
 export interface StoragePort {
-  upload(file: UploadedFile, folder: string): Promise<string>;  // retorna la key
+  upload(file: UploadedFile, folder: string): Promise<string>; // retorna la key
   delete(key: string): Promise<void>;
   getUrl(key: string): Promise<string>;
 }

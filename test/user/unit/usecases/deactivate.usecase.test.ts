@@ -4,8 +4,7 @@ import { UserrepositoryDomain } from '../../../../src/modules/user/domain/reposi
 import { UserEntity } from '../../../../src/modules/user/domain/entities/user.entity';
 import { AppError } from '../../../../src/shared/domain/errors/AppError';
 
-
-const mockRepository:UserrepositoryDomain = {
+const mockRepository: UserrepositoryDomain = {
   save: vi.fn(),
   delete: vi.fn(),
   findById: vi.fn(),
@@ -14,7 +13,7 @@ const mockRepository:UserrepositoryDomain = {
   findByVerificationToken: vi.fn(),
   findByPasswordResetToken: vi.fn(),
   findAll: vi.fn(),
-}
+};
 
 function createActiveUser(): UserEntity {
   const user = UserEntity.create('testuser', 'test@gmail.com', '123456789askf');
@@ -35,10 +34,10 @@ describe('DeactivateUsecase', () => {
 
   describe('execute()', () => {
     it('should set the user status to INACTIVE', async () => {
-      const user = createActiveUser()
+      const user = createActiveUser();
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
 
-      await usecase.execute({id: user.toPersistence().id}, 'ADMIN');
+      await usecase.execute({ id: user.toPersistence().id }, 'ADMIN');
       expect(mockRepository.findById).toHaveBeenCalledWith(user.toPersistence().id);
       expect(mockRepository.save).toHaveBeenCalled();
       const savedUser = vi.mocked(mockRepository.save).mock.calls[0][0];
@@ -47,14 +46,18 @@ describe('DeactivateUsecase', () => {
     it('should throw when the user is not found', async () => {
       vi.mocked(mockRepository.findById).mockResolvedValue(null);
 
-      await expect(() => usecase.execute({id: 'nonexistent-id'}, 'ADMIN')).rejects.toThrow(AppError);
+      await expect(() => usecase.execute({ id: 'nonexistent-id' }, 'ADMIN')).rejects.toThrow(
+        AppError,
+      );
     });
     it('should throw when the user is not ACTIVE', async () => {
       const user = createActiveUser();
       user.deactivate(); // Assuming there's a method to deactivate the user
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
 
-      await expect(() => usecase.execute({id: user.toPersistence().id}, 'ADMIN')).rejects.toThrow(AppError);
+      await expect(() => usecase.execute({ id: user.toPersistence().id }, 'ADMIN')).rejects.toThrow(
+        AppError,
+      );
     });
   });
 });

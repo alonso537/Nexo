@@ -3,8 +3,7 @@ import { GetUserBySlugUsecase } from '../../../../src/modules/user/application/u
 import { UserrepositoryDomain } from '../../../../src/modules/user/domain/repositories/userRepository.domain';
 import { UserEntity } from '../../../../src/modules/user/domain/entities/user.entity';
 
-
-const mockRepository:UserrepositoryDomain = {
+const mockRepository: UserrepositoryDomain = {
   save: vi.fn(),
   delete: vi.fn(),
   findById: vi.fn(),
@@ -13,7 +12,7 @@ const mockRepository:UserrepositoryDomain = {
   findByVerificationToken: vi.fn(),
   findByPasswordResetToken: vi.fn(),
   findAll: vi.fn(),
-}
+};
 
 function createActiveUser(): UserEntity {
   const user = UserEntity.create('testuser', 'test@gmail.com', '123456789askf');
@@ -30,25 +29,22 @@ describe('GetUserBySlugUseCase', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     usecase = new GetUserBySlugUsecase(mockRepository);
-  })
+  });
 
   describe('execute()', () => {
     it('should return a user when a matching username is found', async () => {
-      const user = createActiveUser()
+      const user = createActiveUser();
       vi.mocked(mockRepository.findByUsername).mockResolvedValue(user);
 
-      const result = await usecase.execute({username:'testuser'});
+      const result = await usecase.execute({ username: 'testuser' });
 
       expect(mockRepository.findByUsername).toHaveBeenCalledWith('testuser');
       expect(result).toEqual(user);
-
-
     });
     it('should throw when no user matches the given username', async () => {
       vi.mocked(mockRepository.findByUsername).mockResolvedValue(null);
 
-      await expect(() => usecase.execute({username:'nonexistent'})).rejects.toThrow();
-
+      await expect(() => usecase.execute({ username: 'nonexistent' })).rejects.toThrow();
     });
   });
 });
