@@ -5,7 +5,7 @@ import { ForgotPasswordUsecase } from '../modules/user/application/usecase/forgo
 import { GetmeUserUsecase } from '../modules/user/application/usecase/getMeUser.usecase';
 import { LoginuserUsecase } from '../modules/user/application/usecase/loginuser.usecase';
 import { LogoutUsecase } from '../modules/user/application/usecase/logout.usecase';
-import { RefreshTokenUsecase } from '../modules/user/application/usecase/refreshToke.usecase';
+import { RefreshTokenUsecase } from '../modules/user/application/usecase/refreshToken.usecase';
 import { RegisterUserUsecase } from '../modules/user/application/usecase/registerUser.usecase';
 import { ResendVerificationUsecase } from '../modules/user/application/usecase/resendToken.usecase';
 import { ResetPasswordUsecase } from '../modules/user/application/usecase/resetPassword.usecase';

@@ -8,6 +8,6 @@ export interface TokenPayload {
 }
 
 export interface TokenPort {
-  sign(payload: object, expiresIn?: string | number): Promise<string>;
-  verify<T extends TokenPayload = TokenPayload>(token: string): Promise<T>;
+  sign(payload: object, expiresIn?: string | number, tokenType?: 'access' | 'refresh'): Promise<string>;
+  verify<T extends TokenPayload = TokenPayload>(token: string, tokenType?: 'access' | 'refresh'): Promise<T>;
 }

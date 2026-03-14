@@ -21,8 +21,9 @@ export class BlockUsecase {
             throw new AppError('Forbidden', 403, 'FORBIDDEN');
         }
 
+        const wasBlocked = user.status === 'BLOCKED';
         user.block(reason);
-        user.incrementTokenVersion();
+        if (!wasBlocked) user.incrementTokenVersion();
         await this.userRep.save(user);
         return user;
     }

@@ -22,7 +22,7 @@ export class RefreshTokenUsecase {
         let payload: RefreshTokenPayload;
 
         try {
-            payload = (await this.tokenPort.verify<RefreshTokenPayload>(refreshToken));
+            payload = (await this.tokenPort.verify<RefreshTokenPayload>(refreshToken, 'refresh'));
         } catch (error) {
             if (error instanceof AppError) throw error;
             throw new AppError('Invalid refresh token', 401, 'TOKEN_INVALID');

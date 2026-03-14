@@ -30,7 +30,7 @@ export const createApp = () => {
 
     app.use(rateLimit({
         windowMs: 15 * 60 * 1000,
-        max: 100,
+        max: env.NODE_ENV === 'test' ? 10000 : 100,
         standardHeaders: true,
         legacyHeaders: false,
         message: { status: 'error', code: 'TOO_MANY_REQUESTS', message: 'Too many requests, please try again later.' },
@@ -38,7 +38,7 @@ export const createApp = () => {
 
     const authLimiter = rateLimit({
         windowMs: 15 * 60 * 1000,
-        max: 10,
+        max: env.NODE_ENV === 'test' ? 1000 : 10,
         standardHeaders: true,
         legacyHeaders: false,
         message: { status: 'error', code: 'TOO_MANY_REQUESTS', message: 'Too many attempts, please try again later.' },

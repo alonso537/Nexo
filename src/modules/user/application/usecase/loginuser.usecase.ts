@@ -39,6 +39,7 @@ export class LoginuserUsecase {
       this.tokenPort.sign(
         { sub: data.id, role: data.role, type: 'refresh', tokenVersion: data.tokenVersion },
         env.JWT_REFRESH_TTL,
+        'refresh',
       ),
     ]);
 

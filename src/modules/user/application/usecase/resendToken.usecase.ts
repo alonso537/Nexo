@@ -17,7 +17,6 @@ export class ResendVerificationUsecase {
     
     
     await this.userRep.save(user);
-    // TODO: reenviar correo
     await this.mailPort.sendVerificationEmail(
       user.toPersistence().email,
       user.toPersistence().verificationToken!.value,

@@ -75,7 +75,7 @@ export class UserRepositoryImpl implements UserrepositoryDomain {
     }
 
     async findByUsername(username: string): Promise<UserEntity | null> {
-        const doc = await UserModel.findOne({ username, deletedAt: null });
+        const doc = await UserModel.findOne({ username: username.trim().toLowerCase(), deletedAt: null });
         return doc ? UserMapper(doc.toObject()) : null;
     }
 
