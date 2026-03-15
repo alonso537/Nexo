@@ -1,11 +1,11 @@
 import { Worker } from 'bullmq';
-import { NodemailerAdapter } from '../../../modules/user/infrastructure/email/nodemailer.adapter';
 import { EmailJobPayload } from '../../domain/ports/queue.port';
 import { logger } from '../logger/logger';
 import { redisConnectionOptions } from '../cache/redis.client';
 import { env } from '../../../config/env';
+import { ResendAdapter } from '../../../modules/user/infrastructure/email/resend.adapter';
 
-const mailer = new NodemailerAdapter();
+const mailer = new ResendAdapter();
 
 // En test no levantamos el worker para evitar conexiones reales a Redis
 export const emailWorker =
@@ -25,10 +25,9 @@ export const emailWorker =
         {
           connection: redisConnectionOptions,
           concurrency: 5,
-          // Increase stall time to prevent UnrecoverableError on slow SMTP connections
-          stalledInterval: 60000,  // check stalled jobs every 60s (default: 30s)
-          maxStalledCount: 2,      // allow 2 stalls before marking as failed (default: 1)
-          lockDuration: 60000,     // job lock duration 60s (default: 30s)
+          stalledInterval: 60000,
+          maxStalledCount: 2,
+          lockDuration: 60000,
         },
       );
 
