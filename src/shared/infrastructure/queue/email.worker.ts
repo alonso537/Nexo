@@ -25,9 +25,17 @@ export const emailWorker =
         {
           connection: redisConnectionOptions,
           concurrency: 5,
+          // Increase stall time to prevent UnrecoverableError on slow SMTP connections
+          stalledInterval: 60000,  // check stalled jobs every 60s (default: 30s)
+          maxStalledCount: 2,      // allow 2 stalls before marking as failed (default: 1)
+          lockDuration: 60000,     // job lock duration 60s (default: 30s)
         },
       );
 
 emailWorker?.on('failed', (job, err) => {
   logger.error({ jobId: job?.id, err }, 'Email job failed');
+});
+
+emailWorker?.on('error', (err) => {
+  logger.error({ err }, 'Email worker error');
 });

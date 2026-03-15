@@ -4,9 +4,9 @@ import { redisConnectionOptions } from '../cache/redis.client';
 export const emailQueue = new Queue('emails', {
   connection: redisConnectionOptions,
   defaultJobOptions: {
-    attempts: 3, // 3 intentos si falla
-    backoff: { type: 'exponential', delay: 5000 }, // espera 5s, 10s, 20s
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 5000 },
     removeOnComplete: true,
-    removeOnFail: 100, // guarda últimos 100 jobs fallidos
+    removeOnFail: 100,
   },
 });
