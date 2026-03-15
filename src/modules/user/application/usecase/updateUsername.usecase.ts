@@ -18,7 +18,7 @@ export class UpdateUsernameUsecase {
     }
 
     const existingUserByUsername = await this.userRep.findByUsername(username);
-    
+
     if (existingUserByUsername) {
       if (existingUserByUsername.toPersistence().id === userId) return user;
       throw new AppError('Username already in use', 400, 'USERNAME_IN_USE');
@@ -31,7 +31,9 @@ export class UpdateUsernameUsecase {
     try {
       await this.cache.del(`user:slug:${oldUsername}`);
       await this.cache.del(`user:slug:${username}`);
-    } catch {}
+    } catch {
+      // Redis unavailable — cache invalidation is best-effort
+    }
 
     return user;
   }

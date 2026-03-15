@@ -20,13 +20,19 @@ export class GetUserBySlugUsecase {
       if (cached) {
         return UserEntity.fromPrimitives(JSON.parse(cached));
       }
-    } catch {}
+    } catch {
+      // Redis unavailable — fall through to DB
+    }
 
     const user = await this.userRep.findByUsername(username);
     if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+
     try {
       await this.cache.set(cacheKey, JSON.stringify(user.toPersistence()), TTL);
-    } catch {}
+    } catch {
+      // Redis unavailable — cache write is best-effort
+    }
+
     return user;
   }
 }

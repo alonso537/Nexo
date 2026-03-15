@@ -23,7 +23,9 @@ export class UpdateLastNameUsecase {
 
     try {
       await this.cache.del(`user:slug:${username}`);
-    } catch {}
+    } catch {
+      // Redis unavailable — cache invalidation is best-effort
+    }
 
     return user;
   }

@@ -17,6 +17,7 @@ export const authPaths = {
     post: {
       tags: ['Auth'],
       summary: 'Register a new user',
+      description: 'Creates a new user with PENDING status. A verification email is sent asynchronously via BullMQ.',
       requestBody: {
         required: true,
         content: {
@@ -47,6 +48,7 @@ export const authPaths = {
     post: {
       tags: ['Auth'],
       summary: 'Login and obtain access token',
+      description: 'Returns a short-lived `accessToken` (Bearer) and sets a `refreshToken` httpOnly cookie.',
       requestBody: {
         required: true,
         content: {
@@ -72,7 +74,7 @@ export const authPaths = {
                 properties: {
                   message: { type: 'string' },
                   accessToken: { type: 'string' },
-                  expiresIn: { type: 'integer', example: 900000 },
+                  expiresIn: { type: 'integer', example: 900000, description: 'TTL in milliseconds' },
                 },
               },
             },
@@ -94,7 +96,10 @@ export const authPaths = {
             'application/json': {
               schema: {
                 type: 'object',
-                properties: { accessToken: { type: 'string' }, expiresIn: { type: 'integer' } },
+                properties: {
+                  accessToken: { type: 'string' },
+                  expiresIn: { type: 'integer', description: 'TTL in milliseconds' },
+                },
               },
             },
           },
@@ -108,6 +113,7 @@ export const authPaths = {
     post: {
       tags: ['Auth'],
       summary: 'Invalidate current session and clear cookie',
+      description: 'Increments `tokenVersion` in MongoDB (invalidates all active sessions) and blacklists the current access token in Redis until its natural expiry.',
       security: [{ BearerAuth: [] }],
       responses: {
         '200': { description: 'Logged out successfully' },
@@ -144,6 +150,7 @@ export const authPaths = {
       responses: {
         '200': { description: 'Email verified successfully' },
         '400': { description: 'Invalid or expired token', content: errContent },
+        '404': { description: 'Token not found', content: errContent },
       },
     },
   },
@@ -152,6 +159,7 @@ export const authPaths = {
     post: {
       tags: ['Auth'],
       summary: 'Resend the email verification link',
+      description: 'Regenerates the verification token and enqueues a new email via BullMQ. Always responds 200 to prevent email enumeration.',
       requestBody: {
         required: true,
         content: {
@@ -167,7 +175,7 @@ export const authPaths = {
         },
       },
       responses: {
-        '200': { description: 'If the account exists, a new verification email was sent' },
+        '200': { description: 'If the account exists, a new verification email was enqueued' },
       },
     },
   },
@@ -176,6 +184,7 @@ export const authPaths = {
     post: {
       tags: ['Auth'],
       summary: 'Request a password reset link by email',
+      description: 'Generates a reset token and enqueues the email via BullMQ. Always responds 200 to prevent email enumeration.',
       requestBody: {
         required: true,
         content: {
@@ -191,7 +200,7 @@ export const authPaths = {
         },
       },
       responses: {
-        '200': { description: 'If the account exists, a reset email was sent' },
+        '200': { description: 'If the account exists, a reset email was enqueued' },
       },
     },
   },
@@ -231,6 +240,7 @@ export const authPaths = {
       responses: {
         '200': { description: 'Password reset successfully' },
         '400': { description: 'Invalid or expired token', content: errContent },
+        '404': { description: 'Token not found', content: errContent },
       },
     },
   },

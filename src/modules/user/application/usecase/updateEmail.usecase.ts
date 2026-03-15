@@ -30,11 +30,13 @@ export class UpdateEmailUsecase {
       type: 'verification',
       to: newEmail,
       token: user.getVerificationTokenValue()!,
-    })
+    });
 
     try {
       await this.cache.del(`user:slug:${username}`);
-    } catch {}
+    } catch {
+      // Redis unavailable — cache invalidation is best-effort
+    }
 
     return user;
   }

@@ -1,225 +1,275 @@
-src/
-
 # Nexo API
 
-REST API built with Node.js, Express, and TypeScript, following **Clean Architecture** and **Domain-Driven Design (DDD)** principles. All user-facing text and documentation are in English for portfolio/demo purposes.
+A production-ready REST API for user management, authentication, and authorization — built with **Node.js**, **Express 5**, and **TypeScript** following **Clean Architecture** and **Domain-Driven Design (DDD)** principles.
 
 ---
 
 ## Stack
 
-- **Runtime:** Node.js 22
-- **Framework:** Express 5
-- **Language:** TypeScript (strict)
-- **Database:** MongoDB + Mongoose
-- **Authentication:** JWT (access + refresh tokens)
-- **Hashing:** bcryptjs
-- **Validation:** Zod
-- **Email:** Nodemailer (SMTP, HTML templates)
-- **Storage:** AWS S3 / Cloudflare R2 (`@aws-sdk/client-s3`)
-- **File Uploads:** Multer
-- **Logger:** Pino
-- **Testing:** Vitest
-- **Containers:** Docker + Docker Compose
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js 22 |
+| Framework | Express 5 |
+| Language | TypeScript (strict) |
+| Database | MongoDB + Mongoose |
+| Cache & Queue | Redis (ioredis) + BullMQ |
+| Auth | JWT (access + refresh tokens) |
+| Hashing | bcryptjs |
+| Validation | Zod |
+| Email | Nodemailer (SMTP, HTML templates) |
+| Storage | AWS S3 / Cloudflare R2 |
+| File Uploads | Multer |
+| Logger | Pino |
+| Testing | Vitest (unit, integration, e2e) |
+| Containers | Docker + Docker Compose |
+| CI/CD | GitHub Actions → GHCR |
 
 ---
 
-## Project Structure
+## Architecture
+
+This project follows **Hexagonal Architecture (Ports & Adapters)** with strict DDD layering:
+
+```
+Domain ← Application ← Infrastructure
+```
+
+Dependencies always flow inward. The domain has zero external dependencies.
 
 ```
 src/
-├── config/           # Environment variables (Zod) and dependency container
-├── modules/          # Business modules (DDD)
+├── config/
+│   ├── env.ts              # Zod-validated environment variables
+│   └── container.ts        # Manual dependency injection container
+├── modules/
 │   └── user/
-│       ├── domain/           # Entities, VOs, ports, repository (interface)
-│       ├── application/      # Use cases and DTOs
-│       └── infrastructure/   # Mongoose model, mapper, repository, JWT/bcrypt/email adapters, controller, presenter
-└── shared/           # Code shared between modules
-    ├── domain/           # AppError, base VOs
-    └── infrastructure/   # Logger, middlewares, routes, asyncHandler, S3Adapter
+│       ├── domain/         # Entities, Value Objects, Repository interface, Ports
+│       ├── application/    # Use cases + DTOs (pure business logic)
+│       └── infrastructure/ # MongoDB, JWT, bcrypt, email adapters, HTTP controller
+└── shared/
+    ├── domain/             # AppError, shared VOs, CachePort, QueuePort
+    └── infrastructure/     # Redis, BullMQ worker, S3, middlewares, Swagger, logger
 ```
+
+### Key design decisions
+
+- **Entities with behavior** — `UserEntity` encapsulates all state transitions (`activate`, `block`, `suspend`, `incrementTokenVersion`, etc.) with domain invariants enforced inside.
+- **Value Objects** — `EmailVo`, `UsernameVO`, `PersonNameVO`, `UserIdVO`, `PhotoProfileVO`, `ExpiringTokenVO` validate and wrap primitives.
+- **Ports** — `MailerPort`, `PasswordPort`, `TokenPort`, `StoragePort`, `CachePort`, `QueuePort` define contracts; infrastructure provides the implementations.
+- **Use cases** — one file per use case, each with a single `execute()` method. No framework dependencies.
+- **Presenter** — separates the HTTP response shape from the domain entity.
+
+---
+
+## Features
+
+### Authentication
+- Register with email verification (async via BullMQ)
+- Login with access token (Bearer) + refresh token (httpOnly cookie)
+- Refresh access token via cookie
+- Logout with immediate session invalidation
+- Forgot password / reset password flow (async email via BullMQ)
+- Resend email verification (async via BullMQ)
+
+### User Management
+- Get own profile (`/me`)
+- Update name, last name, username, email, password
+- Upload / delete profile picture (S3/R2)
+- Admin: list users with pagination and filters
+- Admin: change roles, deactivate, suspend accounts
+- Super Admin: assign any role, block accounts
+
+### Security
+- **JWT blacklist** — revoked access tokens are stored in Redis on logout; checked on every authenticated request
+- **Token versioning** — `tokenVersion` stored in MongoDB; incremented on logout, password change, email change, block, suspend, deactivate — immediately invalidates all active sessions
+- **Rate limiting** — global 100 req/15 min; auth routes 10 req/15 min; backed by Redis for distributed environments
+- **Helmet** — secure HTTP headers
+- **Cookies** — `httpOnly`, `secure` (configurable), `sameSite: lax/none`
+- **Input validation** — all inputs validated with Zod before reaching use cases
+- **Request ID** — unique `x-request-id` on every request for tracing
+- **ReDoS protection** — search fields escape special characters before MongoDB regex queries
+- **Soft delete** — deleted users hidden from all queries by default
+
+### Caching (Redis)
+- `getUserBySlug` — cached by username slug, TTL 5 min
+- `getAllUsers` — cached by filter key, TTL 2 min
+- Automatic invalidation on any write operation (update, block, suspend, etc.)
+- Graceful degradation — app functions normally if Redis is unavailable
+
+### Async Email Processing (BullMQ)
+- All emails (verification, password reset) processed in background workers
+- 3 retry attempts with exponential backoff (5s, 10s, 20s)
+- Worker concurrency: 5 parallel jobs
+- Failed jobs retained for inspection
 
 ---
 
 ## Requirements
 
 - Node.js >= 22
-- MongoDB running locally or via Docker
+- Docker + Docker Compose (recommended)
 
 ---
 
-## Installation
+## Quick Start
 
-```bash
-npm install
-```
-
-Copy the environment file and adjust the values:
+### With Docker (recommended)
 
 ```bash
 cp .env.example .env
+# Fill in the required values in .env
+docker compose up --build
+```
+
+This starts MongoDB, Redis, and the Nexo API together.
+
+### Local development
+
+```bash
+npm install
+cp .env.example .env
+# Requires MongoDB and Redis running locally
+npm run dev
 ```
 
 ---
 
 ## Scripts
 
-| Command              | Description                               |
-| -------------------- | ----------------------------------------- |
-| `npm run dev`        | Start in development mode with hot reload |
-| `npm run build`      | Compile TypeScript to `dist/`             |
-| `npm start`          | Run the production build                  |
-| `npm test`           | Run all tests                             |
-| `npm run test:watch` | Run tests in watch mode                   |
-| `npm run lint`       | Lint with ESLint                          |
-| `npm run format`     | Format code with Prettier                 |
+| Command | Description |
+|---|---|
+| `npm run dev` | Start in development mode with hot reload |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm start` | Run the production build |
+| `npm test` | Run all tests (unit + integration + e2e) |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run lint` | Lint with ESLint |
+| `npm run format` | Format with Prettier |
+| `npm run seed` | Seed a super admin account |
 
 ---
 
-## Docker
+## API Docs
 
-To run the app in a container locally:
+Swagger UI is available at:
 
-```bash
-docker compose up --build
+```
+http://localhost:8000/api-docs
 ```
 
----
+### Auth — `/api/auth`
 
-## GitHub Actions: Build & Push Docker Image to GHCR
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `POST` | `/register` | — | Register a new user |
+| `POST` | `/login` | — | Login, returns access token + sets refresh cookie |
+| `GET` | `/me` | Bearer | Get authenticated user profile |
+| `POST` | `/refresh-token` | Cookie | Issue a new access token |
+| `POST` | `/logout` | Bearer | Invalidate session, blacklist token, clear cookie |
+| `GET` | `/verify-email` | — | Verify email with token (`?token=`) |
+| `POST` | `/resend-verification` | — | Resend verification email |
+| `POST` | `/forgot-password` | — | Request password reset link |
+| `POST` | `/reset-password` | — | Reset password with token (`?token=`) |
 
-This project includes a GitHub Actions workflow that automatically builds and pushes a Docker image to GitHub Container Registry (GHCR) on every push to the `main` branch.
+### User — `/api/user`
 
-**How it works:**
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/` | ADMIN | List users with pagination and filters |
+| `GET` | `/:username` | Bearer | Get user by username |
+| `PATCH` | `/name` | Bearer | Update first name |
+| `PATCH` | `/last-name` | Bearer | Update last name |
+| `PATCH` | `/username` | Bearer | Update username |
+| `PATCH` | `/email` | Bearer | Update email + send verification |
+| `PATCH` | `/password` | Bearer | Change password (requires current) |
+| `PATCH` | `/avatar` | Bearer | Upload/replace profile picture |
+| `DELETE` | `/avatar` | Bearer | Delete profile picture |
+| `PATCH` | `/:id/role` | ADMIN | Assign USER or SUPPORT role |
+| `PATCH` | `/:id/role/admin` | SUPER_ADMIN | Assign any role |
+| `PATCH` | `/:id/status/deactivate` | ADMIN | Deactivate account |
+| `PATCH` | `/:id/status/suspend` | ADMIN | Suspend account |
+| `PATCH` | `/:id/status/block` | SUPER_ADMIN | Block account (requires reason) |
 
-- The workflow is defined in `.github/workflows/docker-ghcr.yml`.
-- On every push to `main`, GitHub Actions will:
-  1. Build the Docker image using your `Dockerfile`.
-  2. Authenticate to GHCR using the repository's GitHub token.
-  3. Push the image to `ghcr.io/<your-username>/<your-repo>:latest`.
+#### Filter parameters for `GET /api/user`
 
-**Requirements:**
-
-- Your repository must be hosted on GitHub.
-- You must have a valid `Dockerfile` in the root of your project.
-- The workflow uses the built-in `GITHUB_TOKEN` for authentication (no extra secrets needed).
-
-**How to use:**
-
-1. Push your code to the `main` branch on GitHub.
-2. The workflow will run automatically. You can check progress in the "Actions" tab of your repository.
-3. Your Docker image will be available at:
-   `ghcr.io/<your-username>/<your-repo>:latest`
-
-For more information, see the [GitHub Container Registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+| Parameter | Type | Description |
+|---|---|---|
+| `page` | integer | Page number (default: 1) |
+| `limit` | integer | Results per page (default: 10, max: 100) |
+| `username` | string | Partial match |
+| `email` | string | Partial match |
+| `name` | string | Partial match |
+| `lastName` | string | Partial match |
+| `role` | string | Exact match |
+| `status` | string | Exact match |
+| `includeDeleted` | boolean | Include soft-deleted users |
 
 ---
 
 ## Environment Variables
 
-See [.env.example](.env.example) for the full list of required variables.
+Copy `.env.example` and fill in the required values.
 
-| Variable             | Description                                               | Default                    |
-| -------------------- | --------------------------------------------------------- | -------------------------- |
-| `NODE_ENV`           | Environment                                               | `development`              |
-| `PORT`               | Server port                                               | `3000`                     |
-| `MONGO_URI`          | MongoDB connection URI                                    | —                          |
-| `SECRET`             | General secret (cookie parser)                            | —                          |
-| `JWT_ACCESS_SECRET`  | Secret for signing access tokens                          | —                          |
-| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens                         | —                          |
-| `JWT_ACCESS_TTL`     | Access token TTL                                          | `15m`                      |
-| `JWT_REFRESH_TTL`    | Refresh token TTL                                         | `7d`                       |
-| `COOKIE_SECURE`      | Cookies only HTTPS                                        | `false`                    |
-| `COOKIE_DOMAIN`      | Cookie domain                                             | —                          |
-| `CORS_ORIGINS`       | Allowed origins (comma-separated)                         | —                          |
-| `SMTP_HOST`          | SMTP server host                                          | —                          |
-| `SMTP_PORT`          | SMTP port                                                 | `587`                      |
-| `SMTP_USER`          | SMTP user                                                 | —                          |
-| `SMTP_PASS`          | SMTP password                                             | —                          |
-| `SMTP_FROM`          | Sender address                                            | `Nexo <no-reply@nexo.app>` |
-| `FRONTEND_URL`       | Frontend base URL (for email links)                       | `http://localhost:3000`    |
-| `STORAGE_ENDPOINT`   | S3-compatible endpoint (required for R2, omit for AWS S3) | —                          |
-| `STORAGE_REGION`     | Bucket region                                             | `auto`                     |
-| `STORAGE_ACCESS_KEY` | Access Key ID                                             | —                          |
-| `STORAGE_SECRET_KEY` | Secret Access Key                                         | —                          |
-| `STORAGE_BUCKET`     | Bucket name                                               | —                          |
-| `STORAGE_PUBLIC_URL` | Public base URL for bucket                                | —                          |
-
----
-
-## Endpoints
-
-Base URL: `/api`
-
-### Auth — `/api/auth`
-
-| Method | Path                   | Auth      | Description                                              |
-| ------ | ---------------------- | --------- | -------------------------------------------------------- |
-| `POST` | `/register`            | —         | Register a new user                                      |
-| `POST` | `/login`               | —         | Login, returns access token and refresh cookie           |
-| `GET`  | `/me`                  | ✅ Bearer | Returns the authenticated user                           |
-| `POST` | `/refresh-token`       | Cookie    | Issues a new access token                                |
-| `POST` | `/logout`              | ✅ Bearer | Invalidates the session and clears the cookie            |
-| `GET`  | `/verify-email`        | —         | Verifies email with the token sent by email (`?token=`)  |
-| `POST` | `/resend-verification` | —         | Resends the verification email                           |
-| `POST` | `/forgot-password`     | —         | Requests password reset link                             |
-| `POST` | `/reset-password`      | —         | Resets password with the token sent by email (`?token=`) |
-
-### User — `/api/user`
-
-| Method   | Path                     | Auth           | Description                                                               |
-| -------- | ------------------------ | -------------- | ------------------------------------------------------------------------- |
-| `GET`    | `/`                      | ✅ ADMIN       | List all users with pagination and filters                                |
-| `GET`    | `/:username`             | ✅ Bearer      | Get a user by username                                                    |
-| `PATCH`  | `/name`                  | ✅ Bearer      | Update user's name                                                        |
-| `PATCH`  | `/last-name`             | ✅ Bearer      | Update user's last name                                                   |
-| `PATCH`  | `/username`              | ✅ Bearer      | Update username                                                           |
-| `PATCH`  | `/email`                 | ✅ Bearer      | Update email and send verification                                        |
-| `PATCH`  | `/password`              | ✅ Bearer      | Change password (requires current password)                               |
-| `PATCH`  | `/avatar`                | ✅ Bearer      | Upload or replace profile picture (`multipart/form-data`, field `avatar`) |
-| `DELETE` | `/avatar`                | ✅ Bearer      | Delete profile picture                                                    |
-| `PATCH`  | `/:id/role`              | ✅ ADMIN       | Change user role to `USER` or `SUPPORT`                                   |
-| `PATCH`  | `/:id/role/admin`        | ✅ SUPER_ADMIN | Change user role to `ADMIN`, `USER`, or `SUPPORT`                         |
-| `PATCH`  | `/:id/status/deactivate` | ✅ ADMIN       | Deactivate user account                                                   |
-| `PATCH`  | `/:id/status/suspend`    | ✅ ADMIN       | Suspend user account                                                      |
-| `PATCH`  | `/:id/status/block`      | ✅ SUPER_ADMIN | Block user account (requires reason)                                      |
-
-#### Filtering parameters for `GET /api/user/`
-
-| Parameter        | Type      | Description                         |
-| ---------------- | --------- | ----------------------------------- |
-| `page`           | `number`  | Page (default: `1`)                 |
-| `limit`          | `number`  | Results per page (default: `10`)    |
-| `username`       | `string`  | Filter by username (partial match)  |
-| `email`          | `string`  | Filter by email (partial match)     |
-| `name`           | `string`  | Filter by name (partial match)      |
-| `lastName`       | `string`  | Filter by last name (partial match) |
-| `role`           | `string`  | Filter by exact role                |
-| `status`         | `string`  | Filter by exact status              |
-| `includeDeleted` | `boolean` | Include soft-deleted users          |
+| Variable | Description | Default |
+|---|---|---|
+| `NODE_ENV` | Environment | `development` |
+| `PORT` | Server port | `8000` |
+| `MONGO_URI` | MongoDB connection URI | — |
+| `REDIS_URL` | Redis connection URL | `redis://localhost:6379` |
+| `SECRET` | Cookie parser secret | — |
+| `JWT_ACCESS_SECRET` | Access token signing secret | — |
+| `JWT_REFRESH_SECRET` | Refresh token signing secret | — |
+| `JWT_ACCESS_TTL` | Access token TTL | `15m` |
+| `JWT_REFRESH_TTL` | Refresh token TTL | `7d` |
+| `COOKIE_SECURE` | HTTPS-only cookies | `false` |
+| `COOKIE_DOMAIN` | Cookie domain | — |
+| `CORS_ORIGINS` | Allowed origins (comma-separated) | — |
+| `SMTP_HOST` | SMTP server host | — |
+| `SMTP_PORT` | SMTP port | `587` |
+| `SMTP_USER` | SMTP username | — |
+| `SMTP_PASS` | SMTP password | — |
+| `SMTP_FROM` | Sender address | `Nexo <no-reply@nexo.app>` |
+| `FRONTEND_URL` | Frontend base URL (for email links) | `http://localhost:8000/api/auth` |
+| `STORAGE_ENDPOINT` | S3-compatible endpoint (R2, MinIO, etc.) | — |
+| `STORAGE_REGION` | Bucket region | `auto` |
+| `STORAGE_ACCESS_KEY` | Access Key ID | — |
+| `STORAGE_SECRET_KEY` | Secret Access Key | — |
+| `STORAGE_BUCKET` | Bucket name | — |
+| `STORAGE_PUBLIC_URL` | Public base URL for assets | — |
+| `SEED_EMAIL` | Super admin seed email | — |
+| `SEED_PASSWORD` | Super admin seed password | — |
+| `SEED_USERNAME` | Super admin seed username | — |
 
 ---
 
-## Architecture
+## Testing
 
-This project follows **Clean Architecture** with the following layers:
+Tests are organized in three levels:
 
-- **Domain** — Entities, Value Objects, ports (interfaces). No external dependencies.
-- **Application** — Use cases. Depends only on domain.
-- **Infrastructure** — Concrete implementations (MongoDB, JWT, bcrypt, S3, etc.).
+```
+test/
+├── auth/
+│   ├── unit/        # Use case unit tests (mocked dependencies)
+│   ├── integration/ # Repository integration tests (mongodb-memory-server)
+│   └── e2e/         # Full HTTP flow tests (supertest)
+├── user/
+│   ├── unit/
+│   └── e2e/
+└── shared/
+    └── unit/        # Shared domain unit tests
+```
 
-Dependency rules always flow inward: `Infrastructure → Application → Domain`.
+```bash
+npm test
+```
 
 ---
 
-## Security
+## CI/CD
 
-- **Helmet** — Secure HTTP headers on all responses
-- **Rate limiting** — global 100 req/15 min; auth routes 10 req/15 min
-- **Session invalidation** — each token has a `tokenVersion`; on logout, block, suspend, deactivate, or password/email change, the version is incremented in the DB, invalidating all previous tokens immediately
-- **Request ID** — each request receives a unique `x-request-id` propagated in responses (useful for tracing)
-- **Cookies** — `httpOnly`, `secure` (configurable), `sameSite: lax/none`
-- **Validation** — all inputs validated with Zod before reaching use cases; strings are sanitized with `.trim()`
-- **ReDoS** — search fields with regex escape special characters before passing to MongoDB
-- **Soft delete** — deleted users are not exposed in queries by default
-- **Soft delete** — los usuarios eliminados no se exponen en las consultas por defecto
+On every push to `main`, GitHub Actions:
+1. Builds the Docker image
+2. Authenticates to GitHub Container Registry (GHCR)
+3. Pushes `ghcr.io/<username>/<repo>:latest`
+
+No secrets required — uses the built-in `GITHUB_TOKEN`.
