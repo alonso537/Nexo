@@ -16,13 +16,15 @@ redisClient.on('error', (err) => {
   logger.error({ err }, 'Redis error');
 });
 
-// Opciones de conexión para BullMQ (no puede reutilizar el cliente de ioredis directamente)
+// BullMQ connection options — parsed directly from REDIS_URL for reliability
+const parsed = new URL(env.REDIS_URL);
+
 export const redisConnectionOptions = {
-  host: redisClient.options.host ?? '127.0.0.1',
-  port: redisClient.options.port ?? 6379,
-  password: redisClient.options.password,
-  db: redisClient.options.db ?? 0,
-  // En test: sin reintentos y sin cola offline para que falle rápido y no cuelgue
+  host: parsed.hostname,
+  port: parseInt(parsed.port, 10) || 6379,
+  password: parsed.password || undefined,
+  username: parsed.username || undefined,
+  db: parseInt(parsed.pathname?.replace('/', '') || '0', 10),
   maxRetriesPerRequest: isTest ? 0 : null,
   enableOfflineQueue: !isTest,
   lazyConnect: true,
