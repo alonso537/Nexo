@@ -16,13 +16,13 @@ A production-ready REST API for user management, authentication, and authorizati
 | Auth | JWT (access + refresh tokens) |
 | Hashing | bcryptjs |
 | Validation | Zod |
-| Email | Nodemailer (SMTP, HTML templates) |
+| Email | Resend HTTP API |
 | Storage | AWS S3 / Cloudflare R2 |
 | File Uploads | Multer |
 | Logger | Pino |
 | Testing | Vitest (unit, integration, e2e) |
 | Containers | Docker + Docker Compose |
-| CI/CD | GitHub Actions → GHCR |
+| CI/CD | GitHub Actions → GHCR + Docker Hub |
 
 ---
 
@@ -82,7 +82,7 @@ src/
 ### Security
 - **JWT blacklist** — revoked access tokens are stored in Redis on logout; checked on every authenticated request
 - **Token versioning** — `tokenVersion` stored in MongoDB; incremented on logout, password change, email change, block, suspend, deactivate — immediately invalidates all active sessions
-- **Rate limiting** — global 100 req/15 min; auth routes 10 req/15 min; backed by Redis for distributed environments
+- **Rate limiting** — auth routes 10 req/15 min; user routes 100 req/15 min; backed by Redis for distributed environments
 - **Helmet** — secure HTTP headers
 - **Cookies** — `httpOnly`, `secure` (configurable), `sameSite: lax/none`
 - **Input validation** — all inputs validated with Zod before reaching use cases
@@ -97,7 +97,7 @@ src/
 - Graceful degradation — app functions normally if Redis is unavailable
 
 ### Async Email Processing (BullMQ)
-- All emails (verification, password reset) processed in background workers
+- All emails (verification, password reset) processed in background workers via Resend HTTP API
 - 3 retry attempts with exponential backoff (5s, 10s, 20s)
 - Worker concurrency: 5 parallel jobs
 - Failed jobs retained for inspection
@@ -224,11 +224,8 @@ Copy `.env.example` and fill in the required values.
 | `COOKIE_SECURE` | HTTPS-only cookies | `false` |
 | `COOKIE_DOMAIN` | Cookie domain | — |
 | `CORS_ORIGINS` | Allowed origins (comma-separated) | — |
-| `SMTP_HOST` | SMTP server host | — |
-| `SMTP_PORT` | SMTP port | `587` |
-| `SMTP_USER` | SMTP username | — |
-| `SMTP_PASS` | SMTP password | — |
 | `SMTP_FROM` | Sender address | `Nexo <no-reply@nexo.app>` |
+| `SMTP_PASS` | Resend API key | — |
 | `FRONTEND_URL` | Frontend base URL (for email links) | `http://localhost:8000/api/auth` |
 | `STORAGE_ENDPOINT` | S3-compatible endpoint (R2, MinIO, etc.) | — |
 | `STORAGE_REGION` | Bucket region | `auto` |
@@ -265,11 +262,86 @@ npm test
 
 ---
 
+## Deployment
+
+### Railway (recommended)
+
+1. Push to `main` — GitHub Actions builds and pushes the Docker image automatically
+2. In Railway → **New Project** → **Deploy from GitHub repo**
+3. Add **MongoDB** and **Redis** from the Railway marketplace
+4. Set all environment variables (see table above)
+5. In **Public Networking** → set port to `8000`
+
+**Key variables for Railway:**
+```env
+NODE_ENV=production
+PORT=8000
+COOKIE_SECURE=true
+MONGO_URI=          # from Railway MongoDB service
+REDIS_URL=          # from Railway Redis service (use the private internal URL)
+```
+
+---
+
+### Resend (email)
+
+Nexo uses the [Resend](https://resend.com) HTTP API for transactional emails — no SMTP ports required (Railway blocks outbound SMTP).
+
+1. Create an account at [resend.com](https://resend.com)
+2. **API Keys** → **Create API Key** → copy the key (`re_xxxxxxxx`)
+3. **Domains** → **Add Domain** → enter your domain
+4. Add the DNS records Resend provides to your DNS provider (see Cloudflare below)
+5. Click **Verify Domain** in Resend
+
+**Railway variables:**
+```env
+SMTP_FROM=no-reply@yourdomain.com
+SMTP_PASS=re_xxxxxxxx
+```
+
+> `SMTP_HOST`, `SMTP_PORT` and `SMTP_USER` are not used — Resend sends via HTTP API.
+
+---
+
+### Cloudflare (DNS + Storage)
+
+#### DNS records for Resend
+
+1. [dash.cloudflare.com](https://dash.cloudflare.com) → your domain → **DNS** → **Records**
+2. Add each record Resend provides (SPF, DKIM, CNAME)
+3. ⚠️ Set **Proxy status** to **DNS only** (grey cloud) for all Resend records — proxied records break email verification
+
+#### Cloudflare R2 (file storage)
+
+1. Cloudflare dashboard → **R2 Object Storage** → **Create bucket**
+2. **R2** → **Manage R2 API Tokens** → **Create API Token** with Object Read & Write permissions
+3. Copy credentials and endpoint
+
+**Railway variables:**
+```env
+STORAGE_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+STORAGE_REGION=auto
+STORAGE_ACCESS_KEY=
+STORAGE_SECRET_KEY=
+STORAGE_BUCKET=your-bucket-name
+STORAGE_PUBLIC_URL=https://pub-xxxx.r2.dev
+```
+
+To get `STORAGE_PUBLIC_URL`: bucket → **Settings** → **Public Access** → enable and copy the URL.
+
+---
+
 ## CI/CD
 
 On every push to `main`, GitHub Actions:
-1. Builds the Docker image
-2. Authenticates to GitHub Container Registry (GHCR)
-3. Pushes `ghcr.io/<username>/<repo>:latest`
+1. Runs lint, typecheck and all tests
+2. Builds the Docker image
+3. Pushes to GitHub Container Registry (`ghcr.io/<username>/<repo>:latest`)
+4. Pushes to Docker Hub (`<username>/nexo:latest`)
 
-No secrets required — uses the built-in `GITHUB_TOKEN`.
+**Required GitHub secrets:**
+
+| Secret | Description |
+|---|---|
+| `DOCKERHUB_USERNAME` | Your Docker Hub username |
+| `DOCKERHUB_TOKEN` | Docker Hub access token (Account Settings → Security) |
