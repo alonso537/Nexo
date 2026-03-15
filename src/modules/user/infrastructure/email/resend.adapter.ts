@@ -3,6 +3,7 @@ import { env } from '../../../../config/env';
 import { MailerPort } from '../../domain/ports/mailer.port';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { AppError } from '../../../../shared/domain/errors/AppError';
 
 export class ResendAdapter implements MailerPort {
   private readonly client: Resend;
@@ -33,12 +34,16 @@ export class ResendAdapter implements MailerPort {
       link,
       year: new Date().getFullYear(),
     });
-    await this.client.emails.send({
+    const { error } = await this.client.emails.send({
       from: env.SMTP_FROM,
       to,
       subject: 'Verifica tu correo electrónico – Nexo',
       html,
     });
+
+    if (error) {
+      throw new AppError(`Resend error: ${error.message}`, 500, 'EMAIL_SEND_ERROR');
+    }
   }
 
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
@@ -47,11 +52,15 @@ export class ResendAdapter implements MailerPort {
       link,
       year: new Date().getFullYear(),
     });
-    await this.client.emails.send({
+    const { error } = await this.client.emails.send({
       from: env.SMTP_FROM,
       to,
       subject: 'Restablecer contraseña – Nexo',
       html,
     });
+
+    if (error) {
+      throw new AppError(`Resend error: ${error.message}`, 500, 'EMAIL_SEND_ERROR');
+    }
   }
 }
