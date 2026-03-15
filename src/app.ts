@@ -17,10 +17,10 @@ import { userRoutes } from './modules/user/infrastructure/http/routes/user.route
 
 import type { Express } from 'express';
 
-// En test no se usa RedisStore para evitar dependencia de Redis en los tests
-const makeRedisStore = () => {
+const makeRedisStore = (prefix: string) => {
   if (env.NODE_ENV === 'test') return undefined;
   return new RedisStore({
+    prefix, // prefijo único por limiter para evitar ERR_ERL_DOUBLE_COUNT
     sendCommand: (...args: [string, ...string[]]) =>
       redisClient.call(...args) as unknown as Promise<RedisReply>,
   });
@@ -46,27 +46,25 @@ export const createApp = (): Express => {
   app.use(express.json());
   app.use(cookieParser(env.SECRET));
 
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: env.NODE_ENV === 'test' ? 10000 : 100,
-      standardHeaders: true,
-      legacyHeaders: false,
-      store: makeRedisStore(),
-      message: {
-        status: 'error',
-        code: 'TOO_MANY_REQUESTS',
-        message: 'Too many requests, please try again later.',
-      },
-    }),
-  );
+  const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: env.NODE_ENV === 'test' ? 10000 : 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    store: makeRedisStore('rl:global:'),
+    message: {
+      status: 'error',
+      code: 'TOO_MANY_REQUESTS',
+      message: 'Too many requests, please try again later.',
+    },
+  });
 
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: env.NODE_ENV === 'test' ? 1000 : 10,
     standardHeaders: true,
     legacyHeaders: false,
-    store: makeRedisStore(),
+    store: makeRedisStore('rl:auth:'),
     message: {
       status: 'error',
       code: 'TOO_MANY_REQUESTS',
@@ -80,8 +78,11 @@ export const createApp = (): Express => {
     res.status(200).json({ message: 'OK' });
   });
 
+  // Rutas de auth usan solo authLimiter (más estricto)
   app.use('/api/auth', authLimiter, authRoutes);
-  app.use('/api/user', userRoutes);
+
+  // Rutas de user usan solo globalLimiter
+  app.use('/api/user', globalLimiter, userRoutes);
 
   app.use(errorMiddleware);
 
