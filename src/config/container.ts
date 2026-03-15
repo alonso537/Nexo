@@ -20,7 +20,6 @@ import { GetUserBySlugUsecase } from '../modules/user/application/usecase/getUse
 import { GetAllUsersUsecase } from '../modules/user/application/usecase/getAllUser.usecase';
 import { VerifyEmailUsecase } from '../modules/user/application/usecase/verifyEmail.usecase';
 import { UserRepositoryImpl } from '../modules/user/infrastructure/db/mongo/repositories/userRepository.impl';
-import { NodemailerAdapter } from '../modules/user/infrastructure/email/nodemailer.adapter';
 import { AuthController } from '../modules/user/infrastructure/http/controller/auth.controller';
 import { UserController } from '../modules/user/infrastructure/http/controller/user.controller';
 import { UserPresenter } from '../modules/user/infrastructure/presenter/user.presenter';
@@ -30,37 +29,39 @@ import { S3Adapter } from '../shared/infrastructure/storage/s3.adapter';
 import { makeAuthenticate } from '../shared/infrastructure/http/express/middleware/authenticate.middleware';
 import { DeleteAvatarUsecase } from '../modules/user/application/usecase/deleteAvatar.usecase';
 import { RedisAdapter } from '../shared/infrastructure/cache/redis.adapter';
+import { EmailQueueAdapter } from '../shared/infrastructure/queue/email.queue.adapter';
 
 class Container {
-  //services
+  // services
   private tokenService = new JwtAdapter();
   private passwordService = new BcryptAdapter();
-  private mailService = new NodemailerAdapter();
   private storageService = new S3Adapter();
   private cacheService = new RedisAdapter();
+  private queueService = new EmailQueueAdapter();
 
-  //repositories
+  // repositories
   private userRep = new UserRepositoryImpl();
 
-  //usecases auth
+  // usecases auth
   private registerUserUC = new RegisterUserUsecase(
     this.userRep,
     this.passwordService,
-    this.mailService,
+    this.queueService,
   );
   private loginUserUC = new LoginuserUsecase(this.userRep, this.tokenService, this.passwordService);
   private getMeUserUC = new GetmeUserUsecase(this.userRep);
   private refreshTokenUC = new RefreshTokenUsecase(this.userRep, this.tokenService);
   private logoutUC = new LogoutUsecase(this.userRep, this.cacheService);
   private verifyEmailUC = new VerifyEmailUsecase(this.userRep);
-  private resendVerificationUC = new ResendVerificationUsecase(this.userRep, this.mailService);
-  private forgotPasswordUC = new ForgotPasswordUsecase(this.userRep, this.mailService);
+  private resendVerificationUC = new ResendVerificationUsecase(this.userRep, this.queueService);
+  private forgotPasswordUC = new ForgotPasswordUsecase(this.userRep, this.queueService);
   private resetPasswordUC = new ResetPasswordUsecase(this.userRep, this.passwordService);
-  //usecases user
+
+  // usecases user
   private updateNameUC = new UpdateNameUsecase(this.userRep, this.cacheService);
   private updateLastNameUC = new UpdateLastNameUsecase(this.userRep, this.cacheService);
   private updateUsernameUC = new UpdateUsernameUsecase(this.userRep, this.cacheService);
-  private updateEmailUC = new UpdateEmailUsecase(this.userRep, this.mailService, this.cacheService);
+  private updateEmailUC = new UpdateEmailUsecase(this.userRep, this.queueService, this.cacheService);
   private changeRoleUC = new ChangeRoleUsecase(this.userRep, this.cacheService);
   private deactivateUC = new DeactivateUsecase(this.userRep, this.cacheService);
   private suspendUC = new SuspendUsecase(this.userRep, this.cacheService);
@@ -70,9 +71,11 @@ class Container {
   private getUserBySlugUC = new GetUserBySlugUsecase(this.userRep, this.cacheService);
   private getAllUsersUC = new GetAllUsersUsecase(this.userRep, this.cacheService);
   private deleteAvatarUC = new DeleteAvatarUsecase(this.userRep, this.storageService, this.cacheService);
-  //presenters
+
+  // presenters
   private userPresenter = new UserPresenter();
-  //controllers
+
+  // controllers
   private authController = new AuthController(
     this.registerUserUC,
     this.loginUserUC,
@@ -99,7 +102,6 @@ class Container {
     this.getUserBySlugUC,
     this.getAllUsersUC,
     this.deleteAvatarUC,
-
     this.userPresenter,
   );
 

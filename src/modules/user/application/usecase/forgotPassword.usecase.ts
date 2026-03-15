@@ -1,11 +1,11 @@
-import { MailerPort } from '../../domain/ports/mailer.port';
+import { QueuePort } from '../../../../shared/domain/ports/queue.port';
 import { UserrepositoryDomain } from '../../domain/repositories/userRepository.domain';
 import { ForgotPasswordDTO } from '../dto/forgotPassword.dto';
 
 export class ForgotPasswordUsecase {
   constructor(
     private readonly userRep: UserrepositoryDomain,
-    private readonly mailPort: MailerPort,
+    private readonly mailPort: QueuePort,
   ) {}
 
   async execute({ email }: ForgotPasswordDTO): Promise<void> {
@@ -18,9 +18,10 @@ export class ForgotPasswordUsecase {
     user.generatePasswordResetToken();
 
     await this.userRep.save(user);
-    await this.mailPort.sendPasswordResetEmail(
-      user.toPersistence().email as string,
-      (user.toPersistence().passwordResetToken as { value: string } | null)?.value as string,
-    );
+    await this.mailPort.addEmailJob({
+      type: 'password-reset',
+      to: email,
+      token: (user.toPersistence()!.passwordResetToken as {value:string}).value
+    })
   }
 }

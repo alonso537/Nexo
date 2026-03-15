@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { UpdateEmailUsecase } from '../../../../src/modules/user/application/usecase/updateEmail.usecase';
 import { UserrepositoryDomain } from '../../../../src/modules/user/domain/repositories/userRepository.domain';
 import { UserEntity } from '../../../../src/modules/user/domain/entities/user.entity';
-import { MailerPort } from '../../../../src/modules/user/domain/ports/mailer.port';
-import { AppError } from '../../../../src/shared/domain/errors/AppError';
+import { QueuePort } from '../../../../src/shared/domain/ports/queue.port';
 import { CachePort } from '../../../../src/shared/domain/ports/cache.port';
+import { AppError } from '../../../../src/shared/domain/errors/AppError';
 
 const mockRepository: UserrepositoryDomain = {
   save: vi.fn(),
@@ -17,9 +17,8 @@ const mockRepository: UserrepositoryDomain = {
   findAll: vi.fn(),
 };
 
-const mockEmailPort: MailerPort = {
-  sendVerificationEmail: vi.fn(),
-  sendPasswordResetEmail: vi.fn(),
+const mockQueue: QueuePort = {
+  addEmailJob: vi.fn(),
 };
 
 const mockCache: CachePort = {
@@ -41,14 +40,15 @@ describe('UpdateEmailUseCase', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    usecase = new UpdateEmailUsecase(mockRepository, mockEmailPort, mockCache);
+    usecase = new UpdateEmailUsecase(mockRepository, mockQueue, mockCache);
   });
 
   describe('execute()', () => {
-    it('should update the email, set status to PENDING and send verification email', async () => {
+    it('should update the email, set status to PENDING and enqueue verification email', async () => {
       const user = createActiveUser();
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
+      vi.mocked(mockQueue.addEmailJob).mockResolvedValue();
 
       const newEmail = 'newemail@gmail.com';
       await usecase.execute(user.toPersistence().id as string, { newEmail });
@@ -59,7 +59,12 @@ describe('UpdateEmailUseCase', () => {
       const savedUser = vi.mocked(mockRepository.save).mock.calls[0][0];
       expect(savedUser.toPersistence().email).toBe(newEmail);
       expect(savedUser.toPersistence().status).toBe('PENDING');
-      expect(mockEmailPort.sendVerificationEmail).toHaveBeenCalled();
+      expect(mockQueue.addEmailJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'verification',
+          to: newEmail,
+        }),
+      );
     });
 
     it('should invalidate the cache after updating', async () => {
@@ -67,6 +72,7 @@ describe('UpdateEmailUseCase', () => {
       const username = user.toPersistence().username as string;
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
+      vi.mocked(mockQueue.addEmailJob).mockResolvedValue();
       vi.mocked(mockCache.del).mockResolvedValue();
 
       await usecase.execute(user.toPersistence().id as string, { newEmail: 'newemail@gmail.com' });
@@ -78,6 +84,7 @@ describe('UpdateEmailUseCase', () => {
       const user = createActiveUser();
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
+      vi.mocked(mockQueue.addEmailJob).mockResolvedValue();
 
       const result = await usecase.execute(user.toPersistence().id as string, { newEmail: 'newemail@gmail.com' });
 
@@ -109,7 +116,9 @@ describe('UpdateEmailUseCase', () => {
     it('should throw when the user is not found', async () => {
       vi.mocked(mockRepository.findById).mockResolvedValue(null);
 
-      await expect(usecase.execute('nonexistent-id', { newEmail: 'newemail@gmail.com' })).rejects.toThrow(AppError);
+      await expect(
+        usecase.execute('nonexistent-id', { newEmail: 'newemail@gmail.com' }),
+      ).rejects.toThrow(AppError);
     });
   });
 });

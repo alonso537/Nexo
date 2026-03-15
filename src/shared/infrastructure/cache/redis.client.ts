@@ -14,3 +14,10 @@ redisClient.on('error', (err) => {
   if (env.NODE_ENV === 'test') return;
   logger.error({ err }, 'Redis error');
 });
+
+export const redisConnectionOptions = {
+  host: redisClient.options.host ?? '127.0.0.1',
+  port: redisClient.options.port ?? 6379,
+  password: redisClient.options.password,
+  db: redisClient.options.db,
+}

@@ -3,14 +3,13 @@ import { RegisterUserUsecase } from '../../../../src/modules/user/application/us
 import { UserrepositoryDomain } from '../../../../src/modules/user/domain/repositories/userRepository.domain';
 import { UserEntity } from '../../../../src/modules/user/domain/entities/user.entity';
 import { PasswordPort } from '../../../../src/modules/user/domain/ports/password.port';
-import { MailerPort } from '../../../../src/modules/user/domain/ports/mailer.port';
+import { QueuePort } from '../../../../src/shared/domain/ports/queue.port';
 import { AppError } from '../../../../src/shared/domain/errors/AppError';
 
 const mockRepository: UserrepositoryDomain = {
   save: vi.fn(),
   delete: vi.fn(),
   findById: vi.fn(),
-
   findByEmail: vi.fn(),
   findByUsername: vi.fn(),
   findByVerificationToken: vi.fn(),
@@ -23,9 +22,8 @@ const mockPasswordPort: PasswordPort = {
   compare: vi.fn(),
 };
 
-const mockEmailPort: MailerPort = {
-  sendPasswordResetEmail: vi.fn(),
-  sendVerificationEmail: vi.fn(),
+const mockQueue: QueuePort = {
+  addEmailJob: vi.fn(),
 };
 
 describe('RegisterUserUseCase', () => {
@@ -33,32 +31,36 @@ describe('RegisterUserUseCase', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    usecase = new RegisterUserUsecase(mockRepository, mockPasswordPort, mockEmailPort);
+    usecase = new RegisterUserUsecase(mockRepository, mockPasswordPort, mockQueue);
   });
+
   describe('execute()', () => {
     it('should create and persist a new user', async () => {
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
       vi.mocked(mockRepository.findByUsername).mockResolvedValue(null);
       vi.mocked(mockPasswordPort.hash).mockResolvedValue('hashed-password');
       vi.mocked(mockRepository.save).mockResolvedValue();
+      vi.mocked(mockQueue.addEmailJob).mockResolvedValue();
 
       const result = await usecase.execute({
         username: 'newuser',
-        email: 'emai@gmail.com',
+        email: 'email@gmail.com',
         password: 'password123',
       });
 
       expect(result).toBeInstanceOf(UserEntity);
-      expect(mockRepository.findByEmail).toHaveBeenCalledWith('emai@gmail.com');
+      expect(mockRepository.findByEmail).toHaveBeenCalledWith('email@gmail.com');
       expect(mockRepository.findByUsername).toHaveBeenCalledWith('newuser');
       expect(mockPasswordPort.hash).toHaveBeenCalledWith('password123');
       expect(mockRepository.save).toHaveBeenCalled();
     });
+
     it('should hash the password before saving', async () => {
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
       vi.mocked(mockRepository.findByUsername).mockResolvedValue(null);
       vi.mocked(mockPasswordPort.hash).mockResolvedValue('hashed-password');
       vi.mocked(mockRepository.save).mockResolvedValue();
+      vi.mocked(mockQueue.addEmailJob).mockResolvedValue();
 
       await usecase.execute({
         username: 'newuser',
@@ -70,12 +72,13 @@ describe('RegisterUserUseCase', () => {
       const savedUser = vi.mocked(mockRepository.save).mock.calls[0][0];
       expect(savedUser.toPersistence().passwordHash).toBe('hashed-password');
     });
-    it('should send a verification email after registration', async () => {
+
+    it('should enqueue a verification email job after registration', async () => {
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
       vi.mocked(mockRepository.findByUsername).mockResolvedValue(null);
       vi.mocked(mockPasswordPort.hash).mockResolvedValue('hashed-password');
       vi.mocked(mockRepository.save).mockResolvedValue();
-      vi.mocked(mockEmailPort.sendVerificationEmail).mockResolvedValue();
+      vi.mocked(mockQueue.addEmailJob).mockResolvedValue();
 
       await usecase.execute({
         username: 'newuser',
@@ -83,13 +86,14 @@ describe('RegisterUserUseCase', () => {
         password: 'password123',
       });
 
-      expect(mockEmailPort.sendVerificationEmail).toHaveBeenCalled();
-      const savedUser = vi.mocked(mockRepository.save).mock.calls[0][0];
-      expect(mockEmailPort.sendVerificationEmail).toHaveBeenCalledWith(
-        savedUser.toPersistence().email,
-        (savedUser.toPersistence().verificationToken as { value: string }).value,
+      expect(mockQueue.addEmailJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'verification',
+          to: 'email@gmail.com',
+        }),
       );
     });
+
     it('should throw when the email is already in use', async () => {
       const existingUser = UserEntity.create('existinguser', 'email@gmail.com', 'somehash');
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(existingUser);
@@ -99,6 +103,7 @@ describe('RegisterUserUseCase', () => {
         usecase.execute({ username: 'newuser', email: 'email@gmail.com', password: 'password123' }),
       ).rejects.toThrow(AppError);
     });
+
     it('should throw when the username is already in use', async () => {
       const existingUser = UserEntity.create('existinguser', 'email@gmail.com', 'somehash');
       vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);

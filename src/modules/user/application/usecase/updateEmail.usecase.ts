@@ -1,14 +1,14 @@
 import { AppError } from '../../../../shared/domain/errors/AppError';
 import { CachePort } from '../../../../shared/domain/ports/cache.port';
+import { QueuePort } from '../../../../shared/domain/ports/queue.port';
 import { UserEntity } from '../../domain/entities/user.entity';
-import { MailerPort } from '../../domain/ports/mailer.port';
 import { UserrepositoryDomain } from '../../domain/repositories/userRepository.domain';
 import { UpdateEmailDTO } from '../dto/updateEmail.dto';
 
 export class UpdateEmailUsecase {
   constructor(
     private readonly userRep: UserrepositoryDomain,
-    private readonly mailPort: MailerPort,
+    private readonly mailPort: QueuePort,
     private readonly cache: CachePort,
   ) {}
 
@@ -26,10 +26,11 @@ export class UpdateEmailUsecase {
 
     user.updateEmail(newEmail);
     await this.userRep.save(user);
-    await this.mailPort.sendVerificationEmail(
-      user.toPersistence().email as string,
-      (user.toPersistence().verificationToken as { value: string } | null)?.value as string,
-    );
+    await this.mailPort.addEmailJob({
+      type: 'verification',
+      to: newEmail,
+      token: user.getVerificationTokenValue()!,
+    })
 
     try {
       await this.cache.del(`user:slug:${username}`);

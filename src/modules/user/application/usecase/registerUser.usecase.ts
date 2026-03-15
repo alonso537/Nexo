@@ -1,6 +1,6 @@
 import { AppError } from '../../../../shared/domain/errors/AppError';
+import { QueuePort } from '../../../../shared/domain/ports/queue.port';
 import { UserEntity } from '../../domain/entities/user.entity';
-import { MailerPort } from '../../domain/ports/mailer.port';
 import { PasswordPort } from '../../domain/ports/password.port';
 import { UserrepositoryDomain } from '../../domain/repositories/userRepository.domain';
 import { RegisterUserDto } from '../dto/registerUser.dto';
@@ -9,7 +9,7 @@ export class RegisterUserUsecase {
   constructor(
     private readonly userRep: UserrepositoryDomain,
     private readonly passwordPort: PasswordPort,
-    private readonly mailPort: MailerPort,
+    private readonly mailPort: QueuePort,
   ) {}
 
   async execute({ email, password, username }: RegisterUserDto): Promise<UserEntity> {
@@ -32,7 +32,11 @@ export class RegisterUserUsecase {
 
     await this.userRep.save(user);
 
-    await this.mailPort.sendVerificationEmail(user.getEmail(), user.getVerificationTokenValue()!);
+    await this.mailPort.addEmailJob({
+      type: 'verification',
+      to: email,
+      token: user.getVerificationTokenValue()!,
+    });
 
     return user;
   }

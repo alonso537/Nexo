@@ -1,11 +1,11 @@
-import { MailerPort } from '../../domain/ports/mailer.port';
+import { QueuePort } from '../../../../shared/domain/ports/queue.port';
 import { UserrepositoryDomain } from '../../domain/repositories/userRepository.domain';
 import { ResendVerificationDTO } from '../dto/resendToken.dto';
 
 export class ResendVerificationUsecase {
   constructor(
     private userRep: UserrepositoryDomain,
-    private readonly mailPort: MailerPort,
+    private readonly mailPort: QueuePort,
   ) {}
 
   async execute({ email }: ResendVerificationDTO): Promise<void> {
@@ -16,9 +16,10 @@ export class ResendVerificationUsecase {
     user.regenerateVerificationToken();
 
     await this.userRep.save(user);
-    await this.mailPort.sendVerificationEmail(
-      user.toPersistence().email as string,
-      (user.toPersistence().verificationToken as { value: string } | null)?.value as string,
-    );
+    await this.mailPort.addEmailJob({
+      type: 'verification',
+      to: user.getEmail(),
+      token: user.getVerificationTokenValue()!,
+    })
   }
 }
