@@ -29,6 +29,11 @@ const makeRedisStore = () => {
 export const createApp = (): Express => {
   const app = express();
 
+  // Trust Railway's reverse proxy so express-rate-limit can read X-Forwarded-For correctly
+  if (env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
+
   app.use(requestId);
   app.use(helmet());
   app.use(
@@ -47,7 +52,7 @@ export const createApp = (): Express => {
       max: env.NODE_ENV === 'test' ? 10000 : 100,
       standardHeaders: true,
       legacyHeaders: false,
-      store: makeRedisStore(), // undefined en test → usa store en memoria por defecto
+      store: makeRedisStore(),
       message: {
         status: 'error',
         code: 'TOO_MANY_REQUESTS',
@@ -61,7 +66,7 @@ export const createApp = (): Express => {
     max: env.NODE_ENV === 'test' ? 1000 : 10,
     standardHeaders: true,
     legacyHeaders: false,
-    store: makeRedisStore(), // undefined en test → usa store en memoria por defecto
+    store: makeRedisStore(),
     message: {
       status: 'error',
       code: 'TOO_MANY_REQUESTS',
