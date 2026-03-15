@@ -1,4 +1,5 @@
 import { AppError } from '../../../../shared/domain/errors/AppError';
+import { CachePort } from '../../../../shared/domain/ports/cache.port';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { MailerPort } from '../../domain/ports/mailer.port';
 import { UserrepositoryDomain } from '../../domain/repositories/userRepository.domain';
@@ -8,6 +9,7 @@ export class UpdateEmailUsecase {
   constructor(
     private readonly userRep: UserrepositoryDomain,
     private readonly mailPort: MailerPort,
+    private readonly cache: CachePort,
   ) {}
 
   async execute(userid: string, { newEmail }: UpdateEmailDTO): Promise<UserEntity> {
@@ -20,6 +22,7 @@ export class UpdateEmailUsecase {
     if (existingUserByEmail && existingUserByEmail.toPersistence().id !== userid) {
       throw new AppError('Email already in use', 400, 'EMAIL_IN_USE');
     }
+    const username = user.toPersistence().username as string;
 
     user.updateEmail(newEmail);
     await this.userRep.save(user);
@@ -27,6 +30,11 @@ export class UpdateEmailUsecase {
       user.toPersistence().email as string,
       (user.toPersistence().verificationToken as { value: string } | null)?.value as string,
     );
+
+    try {
+      await this.cache.del(`user:slug:${username}`);
+    } catch {}
+
     return user;
   }
 }

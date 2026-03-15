@@ -21,6 +21,10 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 
+# Copia los templates estáticos que TS no incluye en el build
+COPY --from=builder /app/src/modules/user/infrastructure/email/templates ./dist/modules/user/infrastructure/email/templates
+
+
 EXPOSE 8000
 
 CMD ["node", "dist/index.js"]

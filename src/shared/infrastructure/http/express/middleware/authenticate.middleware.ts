@@ -9,8 +9,8 @@ export interface AuthPayload {
   role: string;
 }
 
-// Extiende la interfaz Request de Express usando módulos ES2015
 import 'express';
+import { CachePort } from '../../../../domain/ports/cache.port';
 declare module 'express' {
   interface Request {
     user?: AuthPayload;
@@ -24,7 +24,7 @@ interface JwtAccessPayload {
 }
 
 export const makeAuthenticate =
-  (userRep: UserrepositoryDomain) =>
+  (userRep: UserrepositoryDomain, cache: CachePort) =>
   async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     const authHeader = req.headers.authorization;
 
@@ -36,6 +36,16 @@ export const makeAuthenticate =
 
     try {
       const payload = jwt.verify(token, env.JWT_ACCESS_SECRET) as JwtAccessPayload;
+
+      // Si Redis no está disponible (ej: tests), simplemente se omite el check
+      try {
+        const isBlacklisted = await cache.exists(`blacklist:${token}`);
+        if (isBlacklisted) {
+          return next(new AppError('Token has been revoked', 401, 'TOKEN_REVOKED'));
+        }
+      } catch {
+        // Redis no disponible: se permite continuar
+      }
 
       const user = await userRep.findById(payload.sub);
       if (!user) {

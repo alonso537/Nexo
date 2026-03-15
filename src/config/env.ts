@@ -7,6 +7,7 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   SECRET: z.string().min(1, 'SECRET environment variable is required'),
   MONGO_URI: z.string().min(1, 'MONGO_URI environment variable is required'),
+  REDIS_URL: z.string().min(1, 'REDIS_URL environment variable is required'),
   JWT_ACCESS_SECRET: z.string().min(1, 'JWT_ACCESS_SECRET environment variable is required'),
   JWT_REFRESH_SECRET: z.string().min(1, 'JWT_REFRESH_SECRET environment variable is required'),
   JWT_ACCESS_TTL: z.string().default('15m'), // formato: 15m, 1h, etc.
@@ -61,4 +62,8 @@ export function getJwtAccessTtlMs(): number {
 
 export function getJwtRefreshTtlMs(): number {
   return parseTimeToMs(env.JWT_REFRESH_TTL);
+}
+
+export function getJwtAccessTtlSeconds(): number {
+  return parseTimeToMs(env.JWT_ACCESS_TTL) / 1000;
 }

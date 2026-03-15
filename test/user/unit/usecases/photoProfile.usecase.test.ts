@@ -4,6 +4,7 @@ import { UserrepositoryDomain } from '../../../../src/modules/user/domain/reposi
 import { UserEntity } from '../../../../src/modules/user/domain/entities/user.entity';
 import { StoragePort, UploadedFile } from '../../../../src/shared/domain/ports/storage.port';
 import { AppError } from '../../../../src/shared/domain/errors/AppError';
+import { CachePort } from '../../../../src/shared/domain/ports/cache.port';
 
 const mockRepository: UserrepositoryDomain = {
   save: vi.fn(),
@@ -22,12 +23,17 @@ const mockStoragePort: StoragePort = {
   getUrl: vi.fn(),
 };
 
+const mockCache: CachePort = {
+  get: vi.fn(),
+  set: vi.fn(),
+  del: vi.fn(),
+  exists: vi.fn(),
+};
+
 function createActiveUser(): UserEntity {
   const user = UserEntity.create('testuser', 'test@gmail.com', '123456789askf');
-  const code = user.toPersistence().verificationToken!.value as string;
+  const code = (user.toPersistence().verificationToken as { value: string }).value;
   user.activate(code);
-  // user.changeRole('ADMIN')
-
   return user;
 }
 
@@ -36,13 +42,13 @@ describe('PhotoProfileUseCase', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    usecase = new UpdatePhotoProfileUsecase(mockRepository, mockStoragePort);
+    usecase = new UpdatePhotoProfileUsecase(mockRepository, mockStoragePort, mockCache);
   });
 
   describe('execute()', () => {
     it('should upload the image to S3 and update the user photoProfile key', async () => {
       const user = createActiveUser();
-      const uploadedKey = `avatars/${user.toPersistence().id}.jpg`;
+      const uploadedKey = `avatars/${user.toPersistence().id as string}.jpg`;
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
       vi.mocked(mockStoragePort.upload).mockResolvedValue(uploadedKey);
 
@@ -53,13 +59,32 @@ describe('PhotoProfileUseCase', () => {
         originalName: 'avatar.jpg',
       };
 
-      await usecase.execute(user.toPersistence().id, file);
+      await usecase.execute(user.toPersistence().id as string, file);
 
-      expect(mockRepository.findById).toHaveBeenCalledWith(user.toPersistence().id);
+      expect(mockRepository.findById).toHaveBeenCalledWith(user.toPersistence().id as string);
       expect(mockStoragePort.upload).toHaveBeenCalledWith(file, 'avatars');
       expect(mockRepository.save).toHaveBeenCalled();
       const savedUser = vi.mocked(mockRepository.save).mock.calls[0][0];
       expect(savedUser.toPersistence().photoProfile).toBe(uploadedKey);
+    });
+
+    it('should invalidate the cache after updating', async () => {
+      const user = createActiveUser();
+      const username = user.toPersistence().username as string;
+      vi.mocked(mockRepository.findById).mockResolvedValue(user);
+      vi.mocked(mockStoragePort.upload).mockResolvedValue('avatars/photo.jpg');
+      vi.mocked(mockCache.del).mockResolvedValue();
+
+      const file: UploadedFile = {
+        buffer: Buffer.from('fake-image-data'),
+        mimetype: 'image/jpeg',
+        size: 1024,
+        originalName: 'avatar.jpg',
+      };
+
+      await usecase.execute(user.toPersistence().id as string, file);
+
+      expect(mockCache.del).toHaveBeenCalledWith(`user:slug:${username}`);
     });
 
     it('should delete the old S3 object when replacing an existing avatar', async () => {
@@ -77,7 +102,7 @@ describe('PhotoProfileUseCase', () => {
         originalName: 'avatar.jpg',
       };
 
-      await usecase.execute(user.toPersistence().id, file);
+      await usecase.execute(user.toPersistence().id as string, file);
 
       expect(mockStoragePort.delete).toHaveBeenCalledWith(oldKey);
     });
@@ -107,7 +132,7 @@ describe('PhotoProfileUseCase', () => {
         originalName: 'avatar.jpg',
       };
 
-      await expect(usecase.execute(user.toPersistence().id, file)).rejects.toThrow(AppError);
+      await expect(usecase.execute(user.toPersistence().id as string, file)).rejects.toThrow(AppError);
     });
   });
 });

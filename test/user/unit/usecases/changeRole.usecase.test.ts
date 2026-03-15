@@ -3,6 +3,7 @@ import { UserrepositoryDomain } from '../../../../src/modules/user/domain/reposi
 import { UserEntity } from '../../../../src/modules/user/domain/entities/user.entity';
 import { ChangeRoleUsecase } from '../../../../src/modules/user/application/usecase/changeRole.usecase';
 import { AppError } from '../../../../src/shared/domain/errors/AppError';
+import { CachePort } from '../../../../src/shared/domain/ports/cache.port';
 
 const mockRepository: UserrepositoryDomain = {
   save: vi.fn(),
@@ -15,12 +16,17 @@ const mockRepository: UserrepositoryDomain = {
   findAll: vi.fn(),
 };
 
+const mockCache: CachePort = {
+  get: vi.fn(),
+  set: vi.fn(),
+  del: vi.fn(),
+  exists: vi.fn(),
+};
+
 function createActiveUser(): UserEntity {
   const user = UserEntity.create('testuser', 'test@gmail.com', '123456789askf');
-  const code = user.toPersistence().verificationToken!.value as string;
+  const code = (user.toPersistence().verificationToken as { value: string }).value;
   user.activate(code);
-  // user.changeRole('ADMIN')
-
   return user;
 }
 
@@ -29,7 +35,7 @@ describe('ChangeRoleUsecase', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    usecase = new ChangeRoleUsecase(mockRepository);
+    usecase = new ChangeRoleUsecase(mockRepository, mockCache);
   });
 
   describe('execute()', () => {
@@ -37,32 +43,47 @@ describe('ChangeRoleUsecase', () => {
       const user = createActiveUser();
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
 
-      await usecase.execute({ id: user.toPersistence().id, role: 'ADMIN' });
-      expect(mockRepository.findById).toHaveBeenCalledWith(user.toPersistence().id);
+      await usecase.execute({ id: user.toPersistence().id as string, role: 'ADMIN' });
+
+      expect(mockRepository.findById).toHaveBeenCalledWith(user.toPersistence().id as string);
       expect(mockRepository.save).toHaveBeenCalled();
       const savedUser = vi.mocked(mockRepository.save).mock.calls[0][0];
       expect(savedUser.toPersistence().role).toBe('ADMIN');
     });
+
+    it('should invalidate the cache after changing role', async () => {
+      const user = createActiveUser();
+      const username = user.toPersistence().username as string;
+      vi.mocked(mockRepository.findById).mockResolvedValue(user);
+      vi.mocked(mockCache.del).mockResolvedValue();
+
+      await usecase.execute({ id: user.toPersistence().id as string, role: 'ADMIN' });
+
+      expect(mockCache.del).toHaveBeenCalledWith(`user:slug:${username}`);
+    });
+
     it('should do nothing when the new role is the same as the current one', async () => {
       const user = createActiveUser();
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
 
       await expect(() =>
-        usecase.execute({ id: user.toPersistence().id, role: 'USER' }),
+        usecase.execute({ id: user.toPersistence().id as string, role: 'USER' }),
       ).not.toThrow(AppError);
     });
+
     it('should throw when the user is not found', async () => {
       vi.mocked(mockRepository.findById).mockResolvedValue(null);
 
-      await expect(() => usecase.execute({ id: 'nonexistent-id', role: 'ADMIN' })).rejects.toThrow(
-        AppError,
-      );
+      await expect(() =>
+        usecase.execute({ id: 'nonexistent-id', role: 'ADMIN' }),
+      ).rejects.toThrow(AppError);
     });
+
     it('should allow assigning any role (authorization is handled by the middleware)', async () => {
       const user = createActiveUser();
       vi.mocked(mockRepository.findById).mockResolvedValue(user);
 
-      await usecase.execute({ id: user.toPersistence().id, role: 'ADMIN' });
+      await usecase.execute({ id: user.toPersistence().id as string, role: 'ADMIN' });
 
       const savedUser = vi.mocked(mockRepository.save).mock.calls[0][0];
       expect(savedUser.toPersistence().role).toBe('ADMIN');

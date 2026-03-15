@@ -1,11 +1,14 @@
 import { createApp } from './app';
 import { env } from './config/env';
 import { ConnectDb } from './modules/user/infrastructure/db/mongo';
+import { redisClient } from './shared/infrastructure/cache/redis.client';
 import { logger } from './shared/infrastructure/logger/logger';
 
 export const startServer = async (): Promise<void> => {
   const connectDb = new ConnectDb(env.MONGO_URI);
   await connectDb.connect();
+
+  await redisClient.connect();
 
   const app = createApp();
 

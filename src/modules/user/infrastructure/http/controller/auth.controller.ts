@@ -1,4 +1,4 @@
-import { env, getJwtAccessTtlMs, getJwtRefreshTtlMs } from '../../../../../config/env';
+import { env, getJwtAccessTtlMs, getJwtAccessTtlSeconds, getJwtRefreshTtlMs } from '../../../../../config/env';
 import { AppError } from '../../../../../shared/domain/errors/AppError';
 import { asyncHandler } from '../../../../../shared/infrastructure/http/asyncHandler';
 import { ForgotPasswordUsecase } from '../../../application/usecase/forgotPassword.usecase';
@@ -109,7 +109,10 @@ export class AuthController {
     if (!userId) {
       throw new AppError('User not authenticated', 401, 'UNAUTHORIZED');
     }
-    await this.logoutUC.execute(userId);
+
+    const accessToken = req.headers.authorization?.slice(7);
+
+    await this.logoutUC.execute(userId, accessToken, getJwtAccessTtlSeconds());
     res.clearCookie('refreshToken', this.getCookieBaseOptions());
     res.status(200).json({
       message: 'Logout successful',

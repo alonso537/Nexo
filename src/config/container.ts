@@ -29,6 +29,7 @@ import { JwtAdapter } from '../modules/user/infrastructure/security/JwtAdapter.a
 import { S3Adapter } from '../shared/infrastructure/storage/s3.adapter';
 import { makeAuthenticate } from '../shared/infrastructure/http/express/middleware/authenticate.middleware';
 import { DeleteAvatarUsecase } from '../modules/user/application/usecase/deleteAvatar.usecase';
+import { RedisAdapter } from '../shared/infrastructure/cache/redis.adapter';
 
 class Container {
   //services
@@ -36,6 +37,7 @@ class Container {
   private passwordService = new BcryptAdapter();
   private mailService = new NodemailerAdapter();
   private storageService = new S3Adapter();
+  private cacheService = new RedisAdapter();
 
   //repositories
   private userRep = new UserRepositoryImpl();
@@ -49,25 +51,25 @@ class Container {
   private loginUserUC = new LoginuserUsecase(this.userRep, this.tokenService, this.passwordService);
   private getMeUserUC = new GetmeUserUsecase(this.userRep);
   private refreshTokenUC = new RefreshTokenUsecase(this.userRep, this.tokenService);
-  private logoutUC = new LogoutUsecase(this.userRep);
+  private logoutUC = new LogoutUsecase(this.userRep, this.cacheService);
   private verifyEmailUC = new VerifyEmailUsecase(this.userRep);
   private resendVerificationUC = new ResendVerificationUsecase(this.userRep, this.mailService);
   private forgotPasswordUC = new ForgotPasswordUsecase(this.userRep, this.mailService);
   private resetPasswordUC = new ResetPasswordUsecase(this.userRep, this.passwordService);
   //usecases user
-  private updateNameUC = new UpdateNameUsecase(this.userRep);
-  private updateLastNameUC = new UpdateLastNameUsecase(this.userRep);
-  private updateUsernameUC = new UpdateUsernameUsecase(this.userRep);
-  private updateEmailUC = new UpdateEmailUsecase(this.userRep, this.mailService);
-  private changeRoleUC = new ChangeRoleUsecase(this.userRep);
-  private deactivateUC = new DeactivateUsecase(this.userRep);
-  private suspendUC = new SuspendUsecase(this.userRep);
-  private blockUC = new BlockUsecase(this.userRep);
+  private updateNameUC = new UpdateNameUsecase(this.userRep, this.cacheService);
+  private updateLastNameUC = new UpdateLastNameUsecase(this.userRep, this.cacheService);
+  private updateUsernameUC = new UpdateUsernameUsecase(this.userRep, this.cacheService);
+  private updateEmailUC = new UpdateEmailUsecase(this.userRep, this.mailService, this.cacheService);
+  private changeRoleUC = new ChangeRoleUsecase(this.userRep, this.cacheService);
+  private deactivateUC = new DeactivateUsecase(this.userRep, this.cacheService);
+  private suspendUC = new SuspendUsecase(this.userRep, this.cacheService);
+  private blockUC = new BlockUsecase(this.userRep, this.cacheService);
   private updatePasswordUC = new UpdatePasswordUsecase(this.userRep, this.passwordService);
-  private updatePhotoProfileUC = new UpdatePhotoProfileUsecase(this.userRep, this.storageService);
-  private getUserBySlugUC = new GetUserBySlugUsecase(this.userRep);
-  private getAllUsersUC = new GetAllUsersUsecase(this.userRep);
-  private deleteAvatarUC = new DeleteAvatarUsecase(this.userRep, this.storageService);
+  private updatePhotoProfileUC = new UpdatePhotoProfileUsecase(this.userRep, this.storageService, this.cacheService);
+  private getUserBySlugUC = new GetUserBySlugUsecase(this.userRep, this.cacheService);
+  private getAllUsersUC = new GetAllUsersUsecase(this.userRep, this.cacheService);
+  private deleteAvatarUC = new DeleteAvatarUsecase(this.userRep, this.storageService, this.cacheService);
   //presenters
   private userPresenter = new UserPresenter();
   //controllers
@@ -110,7 +112,7 @@ class Container {
   }
 
   get authenticate(): ReturnType<typeof makeAuthenticate> {
-    return makeAuthenticate(this.userRep);
+    return makeAuthenticate(this.userRep, this.cacheService);
   }
 }
 
